@@ -38,7 +38,7 @@ void MainWindow::newGame() {
 
 void MainWindow::about() {
     QMessageBox::about(
-        this, tr("About MahjongScoring"),
+        this, tr("About RiichiMahjongScoring"),
         tr("This application is created in order to ease the "
            "computation of Riichi Mahjong scoring and keep "
            "track of the score of the players during a game.\n\n The scoring "
@@ -79,7 +79,8 @@ void MainWindow::createActions() {
     /* About action */
     const QIcon aboutIcon = QIcon::fromTheme("help-about");
     QAction *aboutAct = new QAction(aboutIcon, tr("&About"), this);
-    aboutAct->setStatusTip(tr("Show the MahjongSolving application About box"));
+    aboutAct->setStatusTip(
+        tr("Show the RiichiMahjongSolving application About box"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
     helpMenu->addAction(aboutAct);
 

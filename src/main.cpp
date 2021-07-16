@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
-    QCoreApplication::setApplicationName("MahjongScoring");
+    QCoreApplication::setApplicationName("RiichiMahjongScoring");
     QCoreApplication::setApplicationVersion("0.1");
     QCommandLineParser parser;
     parser.setApplicationDescription(QCoreApplication::applicationName());
