@@ -31,6 +31,10 @@ class MainWindow : public QMainWindow {
      * @brief About message box slot
      */
     void about();
+    /**
+     * @brief How to Score message dialog slot
+     */
+    void howToScore();
 
   private:
     /**

@@ -1,5 +1,6 @@
 #include <QtWidgets>
 
+#include "howtoscoredialog.hpp"
 #include "mainwindow.hpp"
 
 MainWindow::MainWindow()
@@ -32,6 +33,12 @@ void MainWindow::about() {
                           "track of the score of the players during a game."));
 }
 
+void MainWindow::howToScore() {
+    HowToScoreDialog how_to_score_dialog;
+
+    how_to_score_dialog.exec();
+}
+
 void MainWindow::createActions() {
     /* Create Menus */
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
@@ -61,6 +68,13 @@ void MainWindow::createActions() {
     aboutAct->setStatusTip(tr("Show the MahjongSolving application About box"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
     helpMenu->addAction(aboutAct);
+
+    /* How to score action */
+    const QIcon howToIcon = QIcon::fromTheme("help-faq");
+    QAction *howToAct = new QAction(howToIcon, tr("&How to Score"), this);
+    howToAct->setStatusTip(tr("Show the How to Score help page"));
+    connect(howToAct, &QAction::triggered, this, &MainWindow::howToScore);
+    helpMenu->addAction(howToAct);
 }
 
 bool MainWindow::confirmExit() {
