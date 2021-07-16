@@ -99,6 +99,11 @@ void ScoreModel::addTurnResult(const TurnResult &turn_result) {
     recomputeScores();
 }
 
+void ScoreModel::deleteTurnResult(int turn_index) {
+    turn_results_.erase(turn_results_.begin() + turn_index);
+    recomputeScores();
+}
+
 void ScoreModel::reset(N_Players _n_players, int beginning_score,
                        const std::vector<QString> &_player_names) {
     // Empty turns and scores

@@ -49,7 +49,7 @@ std::vector<int> TurnResult::computeScoreChange(int n_players) {
                 }
                 result[i] -= temp;
             }
-            result[winner_] = result[east_player_] + (n_players - 2) * temp;
+            result[winner_] = (n_players - 2) * temp - result[east_player_];
         }
     }
 

@@ -33,6 +33,7 @@ class ScoreModel : public QAbstractTableModel {
 
     /* Turn history modifiers */
     void addTurnResult(const TurnResult &turn_result);
+    void deleteTurnResult(int turn_index);
 
     /* Empty the model and change number of players and player names */
     void reset(N_Players _n_players, int beginning_score,
