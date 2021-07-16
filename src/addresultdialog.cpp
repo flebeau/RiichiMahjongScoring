@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 
 #include "addresultdialog.hpp"
+#include "howtoscoredialog.hpp"
 
 AddResultDialog::AddResultDialog(QWidget *parent,
                                  ScoreModel::N_Players _n_players,
@@ -19,7 +20,8 @@ AddResultDialog::AddResultDialog(QWidget *parent,
       fan_label_(new QLabel(tr("Bonus fan score"))),
       fan_selector_(new QSpinBox),
       confirm_button_(new QPushButton(tr("&Confirm"))),
-      cancel_button_(new QPushButton(tr("C&ancel"))) {
+      cancel_button_(new QPushButton(tr("C&ancel"))),
+      help_button_(new QPushButton(tr("&How to Score"))) {
     /* Initialize widgets */
     // Load names of players for winner selector and east selector
     winner_selector_->addItem(player_names_[0]);
@@ -52,6 +54,8 @@ AddResultDialog::AddResultDialog(QWidget *parent,
             &AddResultDialog::accept);
     connect(cancel_button_, &QPushButton::clicked, this,
             &AddResultDialog::reject);
+    connect(help_button_, &QPushButton::clicked, this,
+            &AddResultDialog::showHelp);
 
     // Refresh the loser selector and set the loser label
     refreshLoserSelector();
@@ -66,6 +70,7 @@ AddResultDialog::AddResultDialog(QWidget *parent,
     QVBoxLayout *confirm_cancel_layout = new QVBoxLayout;
     confirm_cancel_layout->addWidget(confirm_button_);
     confirm_cancel_layout->addWidget(cancel_button_);
+    confirm_cancel_layout->addWidget(help_button_);
 
     /* Create the main layout */
     QGridLayout *layout = new QGridLayout;
@@ -163,6 +168,12 @@ void AddResultDialog::refreshLoserSelector() {
         player_names_[3] != winner_selector_->currentText()) {
         loser_selector_->addItem(player_names_[3]);
     }
+}
+
+void AddResultDialog::showHelp() {
+    HowToScoreDialog how_to_score_dialog;
+
+    how_to_score_dialog.exec();
 }
 
 QGroupBox *AddResultDialog::createEastSelector() {

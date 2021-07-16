@@ -72,6 +72,7 @@ void MainWindow::createActions() {
     /* How to score action */
     const QIcon howToIcon = QIcon::fromTheme("help-faq");
     QAction *howToAct = new QAction(howToIcon, tr("&How to Score"), this);
+    howToAct->setShortcuts(QKeySequence::HelpContents);
     howToAct->setStatusTip(tr("Show the How to Score help page"));
     connect(howToAct, &QAction::triggered, this, &MainWindow::howToScore);
     helpMenu->addAction(howToAct);

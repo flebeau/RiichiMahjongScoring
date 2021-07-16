@@ -90,6 +90,10 @@ class AddResultDialog : public QDialog {
      * winner
      */
     void refreshLoserSelector();
+    /**
+     * @brief Show the How to Score message box
+     */
+    void showHelp();
 
   private:
     /**
@@ -143,4 +147,5 @@ class AddResultDialog : public QDialog {
     QSpinBox *fan_selector_;      /**< Fan score selector */
     QPushButton *confirm_button_; /**< Confirm button */
     QPushButton *cancel_button_;  /**< Cancel button */
+    QPushButton *help_button_;    /**< Help button */
 };
