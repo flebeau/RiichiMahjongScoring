@@ -2,9 +2,17 @@
 
 #include "mainwindow.hpp"
 
-MainWindow::MainWindow() {
+MainWindow::MainWindow()
+    : score_model_(this), main_widget_(new MainWidget(this, &score_model_)) {
+    /* Create Menus */
     createActions();
     setUnifiedTitleAndToolBarOnMac(true);
+
+    /* Set principal widget */
+    setCentralWidget(main_widget_);
+
+    // Resize window
+    resize(700, 740);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -25,10 +33,13 @@ void MainWindow::about() {
 }
 
 void MainWindow::createActions() {
+    /* Create Menus */
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
 
-    QAction *newGameAct = new QAction(tr("&New Game"), this);
+    /* New Game action */
+    const QIcon newIcon = QIcon::fromTheme("document-new");
+    QAction *newGameAct = new QAction(newIcon, tr("&New Game"), this);
     newGameAct->setShortcuts(QKeySequence::New);
     newGameAct->setStatusTip(tr("Create a new game"));
     connect(newGameAct, &QAction::triggered, this, &MainWindow::newGame);
@@ -36,13 +47,17 @@ void MainWindow::createActions() {
 
     fileMenu->addSeparator();
 
-    QAction *exitAct = new QAction(tr("&Quit"), this);
+    /* Exit action */
+    const QIcon exitIcon = QIcon::fromTheme("application-exit");
+    QAction *exitAct = new QAction(exitIcon, tr("&Quit"), this);
     exitAct->setShortcuts(QKeySequence::Quit);
     exitAct->setStatusTip(tr("Exit the application"));
     connect(exitAct, &QAction::triggered, this, &MainWindow::close);
     fileMenu->addAction(exitAct);
 
-    QAction *aboutAct = new QAction(tr("&About"), this);
+    /* About action */
+    const QIcon aboutIcon = QIcon::fromTheme("help-about");
+    QAction *aboutAct = new QAction(aboutIcon, tr("&About"), this);
     aboutAct->setStatusTip(tr("Show the MahjongSolving application About box"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
     helpMenu->addAction(aboutAct);

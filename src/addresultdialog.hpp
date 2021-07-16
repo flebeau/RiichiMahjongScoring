@@ -1,0 +1,146 @@
+#pragma once
+
+#include <QCheckBox>
+#include <QComboBox>
+#include <QDialog>
+#include <QGroupBox>
+#include <QLabel>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSpinBox>
+#include <vector>
+
+#include "scoremodel.hpp"
+
+/**
+ * @brief Implements the dialog for adding the result of a turn
+ *
+ */
+class AddResultDialog : public QDialog {
+  public:
+    AddResultDialog(QWidget *parent, ScoreModel::N_Players _n_players,
+                    const std::vector<QString> &_player_names);
+
+    /* Information getters */
+    /**
+     * @brief Returns the number of the East player selected
+     *
+     * @return int between 0 and 3 (included)
+     */
+    int EastPlayer() const;
+    /**
+     * @brief Returns the number of the winner
+     *
+     * @return int between 0 and 3 (included)
+     */
+    int Winner() const;
+    /**
+     * @brief Identify whether the win is by ron or tsumo
+     *
+     * @return true if it's a ron victory
+     * @return false if it's a tsumo victory
+     */
+    bool RonVictory() const;
+    /**
+     * @brief Returns the number of the loser in case of a ron victory
+     *
+     * @return int between 0 and 3 (included)
+     */
+    int Loser() const;
+    /**
+     * @brief Identify whether Player 1 did Riichi or not
+     *
+     * @return true if Player 1 did Riichi
+     * @return false otherwise
+     */
+    bool Player1DidRiichi() const;
+    /**
+     * @brief Identify whether Player 2 did Riichi or not
+     *
+     * @return true if Player 2 did Riichi
+     * @return false otherwise
+     */
+    bool Player2DidRiichi() const;
+    /**
+     * @brief Identify whether Player 3 did Riichi or not
+     *
+     * @return true if Player 3 did Riichi
+     * @return false otherwise
+     */
+    bool Player3DidRiichi() const;
+    /**
+     * @brief Identify whether Player 4 did Riichi or not
+     *
+     * @return true if Player 4 did Riichi
+     * @return false otherwise
+     */
+    bool Player4DidRiichi() const;
+    /**
+     * @brief Returns the entered Fu score
+     */
+    unsigned FuScore() const;
+    /**
+     * @brief Returns the entered Fan score
+     */
+    unsigned FanScore() const;
+
+  private slots:
+    /**
+     * @brief Refresh the list of potential losers depending on the selected
+     * winner
+     */
+    void refreshLoserSelector();
+
+  private:
+    /**
+     * @brief Create the East selector
+     *
+     * @return QGroupBox*
+     */
+    QGroupBox *createEastSelector();
+    /**
+     * @brief Create the winner selector
+     *
+     * @return QGroupBox*
+     */
+    QGroupBox *createWinnerSelector();
+    /**
+     * @brief Create the ron or tsumo selector
+     *
+     * @return QGroupBox*
+     */
+    QGroupBox *createRonOrTsumoSelector();
+    /**
+     * @brief Create the group for Riichi players input
+     *
+     * @return QGroupBox*
+     */
+    QGroupBox *createRiichiInput();
+    /**
+     * @brief Create the Fu and Fan score selector
+     *
+     * @return QGroupBox*
+     */
+    QGroupBox *createFuFanSelector();
+
+    ScoreModel::N_Players n_players_;          /**< Number of players */
+    const std::vector<QString> &player_names_; /**< Names of the players */
+
+    /* Widgets used */
+    QRadioButton *ron_button_;    /**< Button for ron victory */
+    QRadioButton *tsumo_button_;  /**< Button for tsumo victory */
+    QLabel *label_loser_;         /**< Label for loser selector */
+    QComboBox *east_selector_;    /**< East selector */
+    QComboBox *winner_selector_;  /**< Winner selector */
+    QComboBox *loser_selector_;   /**< Loser selector in case of ron victory */
+    QCheckBox *riichi_player_1_;  /**< Riichi selector for Player 1 */
+    QCheckBox *riichi_player_2_;  /**< Riichi selector for Player 2 */
+    QCheckBox *riichi_player_3_;  /**< Riichi selector for Player 3 */
+    QCheckBox *riichi_player_4_;  /**< Riichi selector for Player 4 */
+    QLabel *fu_label_;            /**< Fu label */
+    QSpinBox *fu_selector_;       /**< Fu score selector */
+    QLabel *fan_label_;           /**< Fan label */
+    QSpinBox *fan_selector_;      /**< Fan score selector */
+    QPushButton *confirm_button_; /**< Confirm button */
+    QPushButton *cancel_button_;  /**< Cancel button */
+};
