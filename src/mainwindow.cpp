@@ -2,6 +2,7 @@
 
 #include "howtoscoredialog.hpp"
 #include "mainwindow.hpp"
+#include "newgamedialog.hpp"
 
 MainWindow::MainWindow()
     : score_model_(this), main_widget_(new MainWidget(this, &score_model_)) {
@@ -24,13 +25,26 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 }
 
-void MainWindow::newGame() {}
+void MainWindow::newGame() {
+    NewGameDialog new_game_dialog(this);
+
+    if (new_game_dialog.exec() == QDialog::Accepted) {
+        // Load new game information
+        score_model_.reset(new_game_dialog.nPlayers(),
+                           new_game_dialog.beginningScore(),
+                           new_game_dialog.playersName());
+    }
+}
 
 void MainWindow::about() {
-    QMessageBox::about(this, tr("About MahjongScoring"),
-                       tr("This application is created in order to ease the "
-                          "computation of Riichi Mahjong scoring and keep "
-                          "track of the score of the players during a game."));
+    QMessageBox::about(
+        this, tr("About MahjongScoring"),
+        tr("This application is created in order to ease the "
+           "computation of Riichi Mahjong scoring and keep "
+           "track of the score of the players during a game.\n\n The scoring "
+           "computation is based on Scott D. Miller's book The Ultimate "
+           "Guide "
+           "to the Japanese Game Taking the World by Storm."));
 }
 
 void MainWindow::howToScore() {

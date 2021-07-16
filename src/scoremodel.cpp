@@ -99,6 +99,30 @@ void ScoreModel::addTurnResult(const TurnResult &turn_result) {
     recomputeScores();
 }
 
+void ScoreModel::reset(N_Players _n_players, int beginning_score,
+                       const std::vector<QString> &_player_names) {
+    // Empty turns and scores
+    turn_results_.clear();
+    scores_.clear();
+
+    // Change number of players
+    n_players_ = _n_players;
+
+    // Initialize scores
+    scores_.push_back(
+        std::vector<int>(static_cast<int>(n_players_), beginning_score));
+
+    // Change player names
+    player_names_[0] = _player_names[0];
+    player_names_[1] = _player_names[1];
+    player_names_[2] = _player_names[2];
+    if (n_players_ == N_Players::FOUR_PLAYERS) {
+        player_names_[3] = _player_names[3];
+    }
+
+    emit layoutChanged();
+}
+
 void ScoreModel::recomputeScores() {
     std::vector<int> initial_scores = std::vector<int>(scores_[0]);
     scores_.clear();

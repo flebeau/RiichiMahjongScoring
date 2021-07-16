@@ -11,6 +11,7 @@
  * It consists of a scoresheet and buttons to add a line of results
  */
 class MainWidget : public QWidget {
+    Q_OBJECT
   public:
     MainWidget(QWidget *parent, ScoreModel *_score_model);
 
@@ -18,7 +19,7 @@ class MainWidget : public QWidget {
     void addResult();
 
   private:
-    ScoreModel::N_Players n_players_;
+    const ScoreModel::N_Players &n_players_;
     const std::vector<QString> &player_names_;
 
     ScoreModel *score_model_;           /**< The scoresheet model */

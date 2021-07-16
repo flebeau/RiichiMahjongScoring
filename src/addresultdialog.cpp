@@ -12,10 +12,14 @@ AddResultDialog::AddResultDialog(QWidget *parent,
       tsumo_button_(new QRadioButton(tr("Tsumo"))), label_loser_(new QLabel),
       east_selector_(new QComboBox), winner_selector_(new QComboBox),
       loser_selector_(new QComboBox),
-      riichi_player_1_(new QCheckBox(tr("Player 1 did Riichi"))),
-      riichi_player_2_(new QCheckBox(tr("Player 2 did Riichi"))),
-      riichi_player_3_(new QCheckBox(tr("Player 3 did Riichi"))),
-      riichi_player_4_(new QCheckBox(tr("Player 4 did Riichi"))),
+      riichi_player_1_(
+          new QCheckBox(tr("%1 did Riichi").arg(player_names_[0]))),
+      riichi_player_2_(
+          new QCheckBox(tr("%1 did Riichi").arg(player_names_[1]))),
+      riichi_player_3_(
+          new QCheckBox(tr("%1 did Riichi").arg(player_names_[2]))),
+      riichi_player_4_(
+          new QCheckBox(tr("%1 did Riichi").arg(player_names_[3]))),
       fu_label_(new QLabel(tr("Fu score"))), fu_selector_(new QSpinBox),
       fan_label_(new QLabel(tr("Bonus fan score"))),
       fan_selector_(new QSpinBox),
@@ -84,16 +88,19 @@ AddResultDialog::AddResultDialog(QWidget *parent,
 
     setLayout(layout);
 
+    /* Set default button */
+    confirm_button_->setDefault(true);
+
     setWindowTitle(tr("Adding a round result"));
 }
 
 int AddResultDialog::EastPlayer() const {
     const QString &east = east_selector_->currentText();
-    if (east == "Player 1") {
+    if (east == player_names_[0]) {
         return 0;
-    } else if (east == "Player 2") {
+    } else if (east == player_names_[1]) {
         return 1;
-    } else if (east == "Player 3") {
+    } else if (east == player_names_[2]) {
         return 2;
     } else {
         return 3;
@@ -102,11 +109,11 @@ int AddResultDialog::EastPlayer() const {
 
 int AddResultDialog::Winner() const {
     const QString &winner = winner_selector_->currentText();
-    if (winner == "Player 1") {
+    if (winner == player_names_[0]) {
         return 0;
-    } else if (winner == "Player 2") {
+    } else if (winner == player_names_[1]) {
         return 1;
-    } else if (winner == "Player 3") {
+    } else if (winner == player_names_[2]) {
         return 2;
     } else {
         return 3;
@@ -117,11 +124,11 @@ bool AddResultDialog::RonVictory() const { return ron_button_->isChecked(); }
 
 int AddResultDialog::Loser() const {
     const QString &loser = loser_selector_->currentText();
-    if (loser == "Player 1") {
+    if (loser == player_names_[0]) {
         return 0;
-    } else if (loser == "Player 2") {
+    } else if (loser == player_names_[1]) {
         return 1;
-    } else if (loser == "Player 3") {
+    } else if (loser == player_names_[2]) {
         return 2;
     } else {
         return 3;

@@ -34,6 +34,10 @@ class ScoreModel : public QAbstractTableModel {
     /* Turn history modifiers */
     void addTurnResult(const TurnResult &turn_result);
 
+    /* Empty the model and change number of players and player names */
+    void reset(N_Players _n_players, int beginning_score,
+               const std::vector<QString> &_player_names);
+
   private:
     /**
      * @brief Recompute the scores depending on the turn history

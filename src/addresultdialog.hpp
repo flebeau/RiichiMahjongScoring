@@ -17,6 +17,7 @@
  *
  */
 class AddResultDialog : public QDialog {
+    Q_OBJECT
   public:
     AddResultDialog(QWidget *parent, ScoreModel::N_Players _n_players,
                     const std::vector<QString> &_player_names);
