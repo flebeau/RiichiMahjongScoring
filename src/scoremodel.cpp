@@ -136,10 +136,65 @@ void ScoreModel::writeToTextStream(QTextStream &out) const {
     if (n_players_ == N_Players::FOUR_PLAYERS) {
         out << player_names_[3] << "\n";
     }
+    out << scores_[0][0] << "\n";
     for (unsigned i = 0; i < turn_results_.size(); ++i) {
         turn_results_[i].writeToTextStream(out);
         out << "\n";
     }
+}
+
+bool ScoreModel::loadFromTextStream(QTextStream &in) {
+    /* Read basic information */
+    int read_n_players = 0;
+    in >> read_n_players;
+    if (read_n_players < 3 || read_n_players > 4) {
+        return false;
+    }
+    QString line;
+    std::vector<QString> player_names =
+        std::vector<QString>(read_n_players, "");
+    // End reading first line
+    in.readLineInto(&line);
+    /* Read player names  */
+    if (!in.readLineInto(&line)) {
+        return false;
+    }
+    player_names[0] = line;
+    if (!in.readLineInto(&line)) {
+        return false;
+    }
+    player_names[1] = line;
+    if (!in.readLineInto(&line)) {
+        return false;
+    }
+    player_names[2] = line;
+    if (read_n_players > 3) {
+        if (!in.readLineInto(&line)) {
+            return false;
+        }
+        player_names[3] = line;
+    }
+    int beginning_score;
+    in >> beginning_score;
+    if (beginning_score < 0) {
+        return false;
+    }
+    // Read end of line with beginning score
+    in.readLineInto(&line);
+
+    /* Reset the scoresheet */
+    reset(static_cast<N_Players>(read_n_players), beginning_score,
+          player_names);
+
+    /* Read the turn results */
+    while (in.readLineInto(&line)) {
+        turn_results_.push_back(TurnResult(&line));
+    }
+
+    // Recompute scores
+    recomputeScores();
+
+    return true;
 }
 
 void ScoreModel::recomputeScores() {

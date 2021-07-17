@@ -1,4 +1,5 @@
 #include <QtWidgets>
+#include <iostream>
 
 #include "howtoscoredialog.hpp"
 #include "mainwindow.hpp"
@@ -78,12 +79,36 @@ void MainWindow::save() {
 void MainWindow::saveAs() {
     // Ask for file dialog
     current_save_file_ = QFileDialog::getSaveFileName(
-        this, tr("Save Scoresheet"), "",
+        this, tr("Save scoresheet"), "",
         tr("Mahjong Scoresheet (*.mss);;All Files (*)"));
 
     // Save scoresheet to file
     if (!current_save_file_.isEmpty()) {
         save();
+    }
+}
+
+void MainWindow::load() {
+    // Ask for file dialog
+    QString load_file = QFileDialog::getOpenFileName(
+        this, tr("Load scoresheet"), "",
+        tr("Mahjong Scoresheet (*.mss);;All Files(*)"));
+
+    // Load scoresheet from file
+    if (!load_file.isEmpty()) {
+        QFile file(load_file);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"),
+                                     file.errorString());
+            return;
+        }
+        QTextStream in(&file);
+        if (!score_model_.loadFromTextStream(in)) {
+            QMessageBox::warning(this, tr("Wrong format"),
+                                 tr("Error while parsing file"));
+            return;
+        }
+        current_save_file_ = load_file;
     }
 }
 
@@ -99,6 +124,14 @@ void MainWindow::createActions() {
     newGameAct->setStatusTip(tr("Create a new game"));
     connect(newGameAct, &QAction::triggered, this, &MainWindow::newGame);
     fileMenu->addAction(newGameAct);
+
+    /* Load game from file action */
+    const QIcon loadIcon = QIcon::fromTheme("document-open");
+    QAction *loadAct = new QAction(loadIcon, tr("&Load from file"), this);
+    loadAct->setShortcuts(QKeySequence::Open);
+    loadAct->setStatusTip(tr("Load a scoresheet from a file"));
+    connect(loadAct, &QAction::triggered, this, &MainWindow::load);
+    fileMenu->addAction(loadAct);
 
     /* Save action */
     const QIcon saveIcon = QIcon::fromTheme("document-save");

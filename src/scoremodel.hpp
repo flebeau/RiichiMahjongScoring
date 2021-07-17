@@ -39,7 +39,18 @@ class ScoreModel : public QAbstractTableModel {
     void reset(N_Players _n_players, int beginning_score,
                const std::vector<QString> &_player_names);
 
+    /**
+     * @brief Convert the scoresheet to text and output it to given stream
+     */
     void writeToTextStream(QTextStream &out) const;
+
+    /**
+     * @brief Load the scoresheet from a text stream
+     *
+     * @return true if parsing didn't encounter any errors
+     * @return false if there has been any errors
+     */
+    bool loadFromTextStream(QTextStream &in);
 
   private:
     /**

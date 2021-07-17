@@ -15,6 +15,8 @@ class TurnResult {
                bool _riichi_player_4 = false, int _fu_score = 20,
                int _fan_score = 0);
 
+    TurnResult(QString *description);
+
     /**
      * @brief Construct a new Turn Result object from a descriptive string
      */

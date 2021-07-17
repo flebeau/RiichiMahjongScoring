@@ -43,6 +43,10 @@ class MainWindow : public QMainWindow {
      * @brief Save As slot
      */
     void saveAs();
+    /**
+     * @brief Load file slot
+     */
+    void load();
 
   private:
     /**
