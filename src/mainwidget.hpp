@@ -28,6 +28,10 @@ class MainWidget : public QWidget {
      * @brief Slot for when deleting a turn result
      */
     void deleteResult();
+    /**
+     * @brief Slot for when showing a turn result details
+     */
+    void showTurnDetail();
 
   private:
     const ScoreModel::N_Players &n_players_;   /**< Number of players */

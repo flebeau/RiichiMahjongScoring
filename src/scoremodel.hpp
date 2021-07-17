@@ -39,6 +39,8 @@ class ScoreModel : public QAbstractTableModel {
     void reset(N_Players _n_players, int beginning_score,
                const std::vector<QString> &_player_names);
 
+    void writeToTextStream(QTextStream &out) const;
+
   private:
     /**
      * @brief Recompute the scores depending on the turn history

@@ -98,3 +98,7 @@ void MainWidget::deleteResult() {
     // Delete the turn in the model
     score_model_->deleteTurnResult(row_selected - 1);
 }
+
+void MainWidget::showTurnDetail() {
+    int row_selected = score_view_->selectionModel()->currentIndex().row();
+}

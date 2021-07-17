@@ -1,4 +1,5 @@
 #include "turnresult.hpp"
+#include <sstream>
 
 TurnResult::TurnResult(int _east_player, int _winner, bool _ron_victory,
                        int _loser, bool _riichi_player_1, bool _riichi_player_2,
@@ -9,6 +10,13 @@ TurnResult::TurnResult(int _east_player, int _winner, bool _ron_victory,
       riichi_player_2(_riichi_player_2), riichi_player_3(_riichi_player_3),
       riichi_player_4(_riichi_player_4), fu_score_(_fu_score),
       fan_score_(_fan_score) {}
+
+TurnResult::TurnResult(const std::string &turn_string) : TurnResult() {
+    std::stringstream s(turn_string);
+    s >> east_player_ >> winner_ >> ron_victory_ >> loser_ >> riichi_player_1 >>
+        riichi_player_2 >> riichi_player_3 >> riichi_player_4 >> fu_score_ >>
+        fan_score_;
+}
 
 std::vector<int> TurnResult::computeScoreChange(int n_players) {
     std::vector<int> result = std::vector<int>(n_players, 0);
@@ -74,6 +82,13 @@ std::vector<int> TurnResult::computeScoreChange(int n_players) {
     result[winner_] += n_riichi_players * 1000;
 
     return result;
+}
+
+void TurnResult::writeToTextStream(QTextStream &out) const {
+    out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
+        << loser_ << " " << riichi_player_1 << " " << riichi_player_2 << " "
+        << riichi_player_3 << " " << riichi_player_4 << " " << fu_score_ << " "
+        << fan_score_;
 }
 
 int TurnResult::Tabular1(int fu, int fan) {

@@ -35,6 +35,14 @@ class MainWindow : public QMainWindow {
      * @brief How to Score message dialog slot
      */
     void howToScore();
+    /**
+     * @brief Save to file slot
+     */
+    void save();
+    /**
+     * @brief Save As slot
+     */
+    void saveAs();
 
   private:
     /**
@@ -52,4 +60,5 @@ class MainWindow : public QMainWindow {
 
     ScoreModel score_model_; /**< Scoresheet */
     MainWidget *main_widget_;
+    QString current_save_file_;
 };

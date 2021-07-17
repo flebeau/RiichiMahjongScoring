@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QTextStream>
 #include <vector>
 
 /**
@@ -15,12 +16,21 @@ class TurnResult {
                int _fan_score = 0);
 
     /**
+     * @brief Construct a new Turn Result object from a descriptive string
+     */
+    TurnResult(const std::string &turn_string);
+
+    /**
      * @brief Compute the score differential for each player after the round
      *
      * @param n_players Number of players (3 or 4)
      * @return std::vector<int>
      */
     std::vector<int> computeScoreChange(int n_players);
+    /**
+     * @brief Write the turn result in the output stream
+     */
+    void writeToTextStream(QTextStream &out) const;
 
   private:
     int east_player_;     /**< Number of East player */

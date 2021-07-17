@@ -128,6 +128,20 @@ void ScoreModel::reset(N_Players _n_players, int beginning_score,
     emit layoutChanged();
 }
 
+void ScoreModel::writeToTextStream(QTextStream &out) const {
+    out << static_cast<int>(n_players_) << "\n"
+        << player_names_[0] << "\n"
+        << player_names_[1] << "\n"
+        << player_names_[2] << "\n";
+    if (n_players_ == N_Players::FOUR_PLAYERS) {
+        out << player_names_[3] << "\n";
+    }
+    for (unsigned i = 0; i < turn_results_.size(); ++i) {
+        turn_results_[i].writeToTextStream(out);
+        out << "\n";
+    }
+}
+
 void ScoreModel::recomputeScores() {
     std::vector<int> initial_scores = std::vector<int>(scores_[0]);
     scores_.clear();

@@ -33,6 +33,8 @@ void MainWindow::newGame() {
         score_model_.reset(new_game_dialog.nPlayers(),
                            new_game_dialog.beginningScore(),
                            new_game_dialog.playersName());
+        // Reset save file
+        current_save_file_ = "";
     }
 }
 
@@ -53,6 +55,38 @@ void MainWindow::howToScore() {
     how_to_score_dialog.exec();
 }
 
+void MainWindow::save() {
+    // If no current save file, call saveAs()
+    if (current_save_file_.isEmpty()) {
+        saveAs();
+    }
+
+    // Try to open the file in write mode
+    QFile file(current_save_file_);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::information(this, tr("Unable to open file"),
+                                 file.errorString());
+        current_save_file_ = "";
+        return;
+    }
+
+    // Serialize the score model to the file
+    QTextStream out(&file);
+    score_model_.writeToTextStream(out);
+}
+
+void MainWindow::saveAs() {
+    // Ask for file dialog
+    current_save_file_ = QFileDialog::getSaveFileName(
+        this, tr("Save Scoresheet"), "",
+        tr("Mahjong Scoresheet (*.mss);;All Files (*)"));
+
+    // Save scoresheet to file
+    if (!current_save_file_.isEmpty()) {
+        save();
+    }
+}
+
 void MainWindow::createActions() {
     /* Create Menus */
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
@@ -65,6 +99,22 @@ void MainWindow::createActions() {
     newGameAct->setStatusTip(tr("Create a new game"));
     connect(newGameAct, &QAction::triggered, this, &MainWindow::newGame);
     fileMenu->addAction(newGameAct);
+
+    /* Save action */
+    const QIcon saveIcon = QIcon::fromTheme("document-save");
+    QAction *saveAct = new QAction(saveIcon, tr("&Save"), this);
+    saveAct->setShortcuts(QKeySequence::Save);
+    saveAct->setStatusTip(tr("Save current scoresheet to file"));
+    connect(saveAct, &QAction::triggered, this, &MainWindow::save);
+    fileMenu->addAction(saveAct);
+
+    /* Save As Action */
+    const QIcon saveAsIcon = QIcon::fromTheme("document-save-as");
+    QAction *saveAsAct = new QAction(saveAsIcon, tr("S&ave As"), this);
+    saveAsAct->setShortcuts(QKeySequence::SaveAs);
+    saveAsAct->setStatusTip(tr("Save current scoresheet to file"));
+    connect(saveAsAct, &QAction::triggered, this, &MainWindow::saveAs);
+    fileMenu->addAction(saveAsAct);
 
     fileMenu->addSeparator();
 
