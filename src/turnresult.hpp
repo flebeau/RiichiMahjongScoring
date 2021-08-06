@@ -28,11 +28,23 @@ class TurnResult {
      * @param n_players Number of players (3 or 4)
      * @return std::vector<int>
      */
-    std::vector<int> computeScoreChange(int n_players);
+    std::vector<int> computeScoreChange(int n_players) const;
     /**
      * @brief Write the turn result in the output stream
      */
     void writeToTextStream(QTextStream &out) const;
+
+    /* Getters */
+    int eastPlayer() const;
+    int winner() const;
+    bool ronVictory() const;
+    int loser() const;
+    bool riichiPlayer1() const;
+    bool riichiPlayer2() const;
+    bool riichiPlayer3() const;
+    bool riichiPlayer4() const;
+    int fuScore() const;
+    int fanScore() const;
 
   private:
     int east_player_;     /**< Number of East player */

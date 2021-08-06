@@ -26,7 +26,7 @@ TurnResult::TurnResult(QString *description) : TurnResult() {
     riichi_player_4 = static_cast<bool>(r4);
 }
 
-std::vector<int> TurnResult::computeScoreChange(int n_players) {
+std::vector<int> TurnResult::computeScoreChange(int n_players) const {
     std::vector<int> result = std::vector<int>(n_players, 0);
     int temp = 0;
 
@@ -98,6 +98,17 @@ void TurnResult::writeToTextStream(QTextStream &out) const {
         << riichi_player_3 << " " << riichi_player_4 << " " << fu_score_ << " "
         << fan_score_;
 }
+
+int TurnResult::eastPlayer() const { return east_player_; }
+int TurnResult::winner() const { return winner_; }
+bool TurnResult::ronVictory() const { return ron_victory_; }
+int TurnResult::loser() const { return loser_; }
+bool TurnResult::riichiPlayer1() const { return riichi_player_1; }
+bool TurnResult::riichiPlayer2() const { return riichi_player_2; }
+bool TurnResult::riichiPlayer3() const { return riichi_player_3; }
+bool TurnResult::riichiPlayer4() const { return riichi_player_4; }
+int TurnResult::fuScore() const { return fu_score_; }
+int TurnResult::fanScore() const { return fan_score_; }
 
 int TurnResult::Tabular1(int fu, int fan) {
     if (fan == 1) {

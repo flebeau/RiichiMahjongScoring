@@ -30,6 +30,7 @@ class ScoreModel : public QAbstractTableModel {
     /* Getters */
     const N_Players &NPlayers() const;
     const std::vector<QString> &PlayerNames() const;
+    const std::vector<TurnResult> &turnResults() const;
 
     /* Turn history modifiers */
     void addTurnResult(const TurnResult &turn_result);

@@ -93,6 +93,9 @@ const ScoreModel::N_Players &ScoreModel::NPlayers() const { return n_players_; }
 const std::vector<QString> &ScoreModel::PlayerNames() const {
     return player_names_;
 }
+const std::vector<TurnResult> &ScoreModel::turnResults() const {
+    return turn_results_;
+}
 
 void ScoreModel::addTurnResult(const TurnResult &turn_result) {
     turn_results_.push_back(turn_result);

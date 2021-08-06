@@ -7,6 +7,7 @@
 
 #include "addresultdialog.hpp"
 #include "mainwidget.hpp"
+#include "showdetaildialog.hpp"
 
 MainWidget::MainWidget(QWidget *parent, ScoreModel *_score_model)
     : QWidget(parent), n_players_(_score_model->NPlayers()),
@@ -48,6 +49,10 @@ MainWidget::MainWidget(QWidget *parent, ScoreModel *_score_model)
     // Connect a click on delete button to the action of deleting a turn
     connect(delete_result_button_, &QPushButton::clicked, this,
             &MainWidget::deleteResult);
+
+    // Connect a click on show detail button to the showing of the detail dialog
+    connect(result_detail_button_, &QPushButton::clicked, this,
+            &MainWidget::showTurnDetail);
 }
 
 void MainWidget::addResult() {
@@ -101,4 +106,9 @@ void MainWidget::deleteResult() {
 
 void MainWidget::showTurnDetail() {
     int row_selected = score_view_->selectionModel()->currentIndex().row();
+
+    ShowDetailDialog detail_dialog(
+        this, score_model_->turnResults().at(row_selected - 1),
+        score_model_->NPlayers(), score_model_->PlayerNames());
+    detail_dialog.exec();
 }
