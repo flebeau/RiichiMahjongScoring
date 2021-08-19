@@ -1,7 +1,7 @@
 #include "turnresult.hpp"
 #include <sstream>
 
-TurnResult::TurnResult(int _east_player, int _winner, bool _ron_victory,
+TurnResult::TurnResult(int _east_player, int _winner, int _ron_victory,
                        int _loser, bool _riichi_player_1, bool _riichi_player_2,
                        bool _riichi_player_3, bool _riichi_player_4,
                        int _fu_score, int _fan_score)
@@ -11,30 +11,46 @@ TurnResult::TurnResult(int _east_player, int _winner, bool _ron_victory,
       riichi_player_4(_riichi_player_4), fu_score_(_fu_score),
       fan_score_(_fan_score) {}
 
-TurnResult::TurnResult(QString *description) : TurnResult() {
+TurnResult::TurnResult(std::vector<int> scores)
+    : ron_victory_(2), scores_(scores) {}
+
+TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
     QTextStream in(description);
 
-    int ron, r1, r2, r3, r4;
+    int r1, r2, r3, r4;
 
-    in >> east_player_ >> winner_ >> ron >> loser_ >> r1 >> r2 >> r3 >> r4 >>
-        fu_score_ >> fan_score_;
+    in >> east_player_ >> winner_ >> ron_victory_;
+    if (ron_victory_ <= 1) {
+        in >> loser_ >> r1 >> r2 >> r3 >> r4 >> fu_score_ >> fan_score_;
 
-    ron_victory_ = static_cast<bool>(ron);
-    riichi_player_1 = static_cast<bool>(r1);
-    riichi_player_2 = static_cast<bool>(r2);
-    riichi_player_3 = static_cast<bool>(r3);
-    riichi_player_4 = static_cast<bool>(r4);
+        riichi_player_1 = static_cast<bool>(r1);
+        riichi_player_2 = static_cast<bool>(r2);
+        riichi_player_3 = static_cast<bool>(r3);
+        riichi_player_4 = static_cast<bool>(r4);
+    } else { // Manual result
+        if (n_players == 3) {
+            scores_ = std::vector<int>(3, 0);
+            in >> scores_[0] >> scores_[1] >> scores_[2];
+        } else if (n_players == 4) {
+            scores_ = std::vector<int>(4, 0);
+            in >> scores_[0] >> scores_[1] >> scores_[2] >> scores_[3];
+        }
+    }
 }
 
 std::vector<int> TurnResult::computeScoreChange(int n_players) const {
     std::vector<int> result = std::vector<int>(n_players, 0);
     int temp = 0;
 
-    /* First handle the case of ron or tsumo victory*/
-    if (ron_victory_) {
+    if (ron_victory_ == 2) { // Manual score
+        return scores_;
+    }
+    /* Handle the case of ron or tsumo victory*/
+    else if (ron_victory_ == 1) {
         // There are two cases: winner is east or not
         if (winner_ == east_player_) {
-            // If winner is east, loser pays the amount according to Tabular2
+            // If winner is east, loser pays the amount according to
+            // Tabular2
             temp = Tabular2(fu_score_, fan_score_);
             result[loser_] = -temp;
             result[winner_] = temp;
@@ -55,8 +71,8 @@ std::vector<int> TurnResult::computeScoreChange(int n_players) const {
             }
             result[winner_] += n_players * temp;
         } else {
-            // If winner is not east, east pays according to Tabular1 and other
-            // losers pay according to Tabular3
+            // If winner is not east, east pays according to Tabular1 and
+            // other losers pay according to Tabular3
             result[east_player_] -= Tabular1(fu_score_, fan_score_);
             temp = Tabular3(fu_score_, fan_score_);
             for (int i = 0; i < n_players; i++) {
@@ -93,10 +109,18 @@ std::vector<int> TurnResult::computeScoreChange(int n_players) const {
 }
 
 void TurnResult::writeToTextStream(QTextStream &out) const {
-    out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
-        << loser_ << " " << riichi_player_1 << " " << riichi_player_2 << " "
-        << riichi_player_3 << " " << riichi_player_4 << " " << fu_score_ << " "
-        << fan_score_;
+    if (ron_victory_ <= 1) {
+        out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
+            << loser_ << " " << riichi_player_1 << " " << riichi_player_2 << " "
+            << riichi_player_3 << " " << riichi_player_4 << " " << fu_score_
+            << " " << fan_score_;
+    } else { // Manual score
+        out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
+            << scores_[0] << " " << scores_[1] << " " << scores_[2];
+        if (scores_.size() == 4) {
+            out << " " << scores_[3];
+        }
+    }
 }
 
 int TurnResult::eastPlayer() const { return east_player_; }

@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSpinBox>
+#include <QTabWidget>
 #include <vector>
 
 #include "scoremodel.hpp"
@@ -41,7 +42,13 @@ class AddResultDialog : public QDialog {
      * @return true if it's a ron victory
      * @return false if it's a tsumo victory
      */
-    bool RonVictory() const;
+    int RonVictory() const;
+    /**
+     * @brief Return the manual scores entered in manual score tab
+     *
+     * @return std::vector<int>
+     */
+    std::vector<int> ManualScores() const;
     /**
      * @brief Returns the number of the loser in case of a ron victory
      *
@@ -132,21 +139,32 @@ class AddResultDialog : public QDialog {
     const std::vector<QString> &player_names_; /**< Names of the players */
 
     /* Widgets used */
-    QRadioButton *ron_button_;    /**< Button for ron victory */
-    QRadioButton *tsumo_button_;  /**< Button for tsumo victory */
-    QLabel *label_loser_;         /**< Label for loser selector */
-    QComboBox *east_selector_;    /**< East selector */
-    QComboBox *winner_selector_;  /**< Winner selector */
-    QComboBox *loser_selector_;   /**< Loser selector in case of ron victory */
-    QCheckBox *riichi_player_1_;  /**< Riichi selector for Player 1 */
-    QCheckBox *riichi_player_2_;  /**< Riichi selector for Player 2 */
-    QCheckBox *riichi_player_3_;  /**< Riichi selector for Player 3 */
-    QCheckBox *riichi_player_4_;  /**< Riichi selector for Player 4 */
-    QLabel *fu_label_;            /**< Fu label */
-    QSpinBox *fu_selector_;       /**< Fu score selector */
-    QLabel *fan_label_;           /**< Fan label */
-    QSpinBox *fan_selector_;      /**< Fan score selector */
-    QPushButton *confirm_button_; /**< Confirm button */
-    QPushButton *cancel_button_;  /**< Cancel button */
-    QPushButton *help_button_;    /**< Help button */
+    QRadioButton *ron_button_;   /**< Button for ron victory */
+    QRadioButton *tsumo_button_; /**< Button for tsumo victory */
+    QLabel *label_loser_;        /**< Label for loser selector */
+    QComboBox *east_selector_;   /**< East selector */
+    QComboBox *winner_selector_; /**< Winner selector */
+    QComboBox *loser_selector_;  /**< Loser selector in case of ron victory */
+    QCheckBox *riichi_player_1_; /**< Riichi selector for Player 1 */
+    QCheckBox *riichi_player_2_; /**< Riichi selector for Player 2 */
+    QCheckBox *riichi_player_3_; /**< Riichi selector for Player 3 */
+    QCheckBox *riichi_player_4_; /**< Riichi selector for Player 4 */
+    QLabel *fu_label_;           /**< Fu label */
+    QSpinBox *fu_selector_;      /**< Fu score selector */
+    QLabel *fan_label_;          /**< Fan label */
+    QSpinBox *fan_selector_;     /**< Fan score selector */
+    QLabel *label_manual_player_1_;   /**< Label for manual score */
+    QSpinBox *score_manual_player_1_; /**< Manual score selector */
+    QLabel *label_manual_player_2_;   /**< Label for manual score */
+    QSpinBox *score_manual_player_2_; /**< Manual score selector */
+    QLabel *label_manual_player_3_;   /**< Label for manual score */
+    QSpinBox *score_manual_player_3_; /**< Manual score selector */
+    QLabel *label_manual_player_4_;   /**< Label for manual score */
+    QSpinBox *score_manual_player_4_; /**< Manual score selector */
+    QTabWidget *tabs_;                /**< Tab widget */
+    QWidget *ron_tsumo_tab_;          /**< Default tab */
+    QWidget *manual_tab_;             /**< Manual tab */
+    QPushButton *confirm_button_;     /**< Confirm button */
+    QPushButton *cancel_button_;      /**< Cancel button */
+    QPushButton *help_button_;        /**< Help button */
 };

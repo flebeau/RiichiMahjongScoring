@@ -23,10 +23,18 @@ AddResultDialog::AddResultDialog(QWidget *parent,
       fu_label_(new QLabel(tr("Fu score"))), fu_selector_(new QSpinBox),
       fan_label_(new QLabel(tr("Bonus fan score"))),
       fan_selector_(new QSpinBox),
+      label_manual_player_1_(new QLabel(tr("%1 scored").arg(player_names_[0]))),
+      score_manual_player_1_(new QSpinBox),
+      label_manual_player_2_(new QLabel(tr("%1 scored").arg(player_names_[1]))),
+      score_manual_player_2_(new QSpinBox),
+      label_manual_player_3_(new QLabel(tr("%1 scored").arg(player_names_[2]))),
+      score_manual_player_3_(new QSpinBox),
+      score_manual_player_4_(new QSpinBox), tabs_(new QTabWidget),
+      ron_tsumo_tab_(new QWidget), manual_tab_(new QWidget),
       confirm_button_(new QPushButton(tr("&Confirm"))),
       cancel_button_(new QPushButton(tr("C&ancel"))),
       help_button_(new QPushButton(tr("&How to Score"))) {
-    /* Initialize widgets */
+    /* Initialize widgets for default tab */
     // Load names of players for winner selector and east selector
     winner_selector_->addItem(player_names_[0]);
     winner_selector_->addItem(player_names_[1]);
@@ -70,6 +78,59 @@ AddResultDialog::AddResultDialog(QWidget *parent,
     fu_selector_->setMaximum(90);
     fan_selector_->setMinimum(1);
 
+    /* Initialize widgets for manual tab */
+    // Set the minimum and maximum for spinboxes
+    score_manual_player_1_->setMinimum(-100000);
+    score_manual_player_1_->setMaximum(100000);
+    score_manual_player_1_->setValue(0);
+    score_manual_player_1_->setSingleStep(100);
+    score_manual_player_2_->setMinimum(-100000);
+    score_manual_player_2_->setMaximum(100000);
+    score_manual_player_2_->setValue(0);
+    score_manual_player_2_->setSingleStep(100);
+    score_manual_player_3_->setMinimum(-100000);
+    score_manual_player_3_->setMaximum(100000);
+    score_manual_player_3_->setValue(0);
+    score_manual_player_3_->setSingleStep(100);
+    score_manual_player_4_->setMinimum(-100000);
+    score_manual_player_4_->setMaximum(100000);
+    score_manual_player_4_->setValue(0);
+    score_manual_player_4_->setSingleStep(100);
+
+    /* Create the layout for ron/tsumo tab */
+    QVBoxLayout *default_tab_layout = new QVBoxLayout;
+
+    default_tab_layout->addWidget(createEastSelector());
+    default_tab_layout->addWidget(createWinnerSelector());
+    default_tab_layout->addWidget(createRonOrTsumoSelector());
+    default_tab_layout->addWidget(createRiichiInput());
+    default_tab_layout->addWidget(createFuFanSelector());
+
+    ron_tsumo_tab_->setLayout(default_tab_layout);
+
+    /* Create the layout for the manual score tab */
+    QGridLayout *manual_tab_layout = new QGridLayout;
+
+    manual_tab_layout->addWidget(label_manual_player_1_, 0, 0);
+    manual_tab_layout->addWidget(score_manual_player_1_, 0, 1);
+    manual_tab_layout->addWidget(label_manual_player_2_, 1, 0);
+    manual_tab_layout->addWidget(score_manual_player_2_, 1, 1);
+    manual_tab_layout->addWidget(label_manual_player_3_, 2, 0);
+    manual_tab_layout->addWidget(score_manual_player_3_, 2, 1);
+    if (n_players_ == ScoreModel::N_Players::FOUR_PLAYERS) {
+        label_manual_player_4_ =
+            new QLabel(tr("%1 scored").arg(player_names_[3]));
+        manual_tab_layout->addWidget(label_manual_player_4_, 3, 0);
+        manual_tab_layout->addWidget(score_manual_player_4_, 3, 1);
+    }
+    manual_tab_layout->addWidget(new QWidget, 3, 0, 2, 2);
+
+    manual_tab_->setLayout(manual_tab_layout);
+
+    /* Add tabs to the tab widget */
+    tabs_->addTab(ron_tsumo_tab_, tr("Ron or tsumo"));
+    tabs_->addTab(manual_tab_, tr("Manual score"));
+
     /* Create the confirm / cancel layout */
     QVBoxLayout *confirm_cancel_layout = new QVBoxLayout;
     confirm_cancel_layout->addWidget(confirm_button_);
@@ -77,16 +138,11 @@ AddResultDialog::AddResultDialog(QWidget *parent,
     confirm_cancel_layout->addWidget(help_button_);
 
     /* Create the main layout */
-    QGridLayout *layout = new QGridLayout;
+    QGridLayout *main_layout = new QGridLayout;
+    main_layout->addWidget(tabs_, 0, 0, 2, 1);
+    main_layout->addLayout(confirm_cancel_layout, 0, 1);
 
-    layout->addWidget(createEastSelector(), 0, 0);
-    layout->addWidget(createWinnerSelector(), 1, 0);
-    layout->addWidget(createRonOrTsumoSelector(), 2, 0);
-    layout->addWidget(createRiichiInput(), 3, 0);
-    layout->addWidget(createFuFanSelector(), 4, 0);
-    layout->addLayout(confirm_cancel_layout, 0, 1);
-
-    setLayout(layout);
+    setLayout(main_layout);
 
     /* Set default button */
     confirm_button_->setDefault(true);
@@ -120,7 +176,24 @@ int AddResultDialog::Winner() const {
     }
 }
 
-bool AddResultDialog::RonVictory() const { return ron_button_->isChecked(); }
+int AddResultDialog::RonVictory() const {
+    if (tabs_->currentIndex() == 0) {
+        return static_cast<int>(ron_button_->isChecked());
+    } else {
+        return 2;
+    }
+}
+
+std::vector<int> AddResultDialog::ManualScores() const {
+    std::vector<int> scores = std::vector<int>(static_cast<int>(n_players_), 0);
+    scores[0] = score_manual_player_1_->value();
+    scores[1] = score_manual_player_2_->value();
+    scores[2] = score_manual_player_3_->value();
+    if (n_players_ == ScoreModel::N_Players::FOUR_PLAYERS) {
+        scores[3] = score_manual_player_4_->value();
+    }
+    return scores;
+}
 
 int AddResultDialog::Loser() const {
     const QString &loser = loser_selector_->currentText();

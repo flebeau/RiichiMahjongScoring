@@ -9,18 +9,18 @@
  */
 class TurnResult {
   public:
-    TurnResult(int _east_player = 0, int _winner = 0, bool _ron_victory = false,
+    TurnResult(int _east_player = 0, int _winner = 0, int _ron_victory = 0,
                int _loser = 0, bool _riichi_player_1 = false,
                bool _riichi_player_2 = false, bool _riichi_player_3 = false,
                bool _riichi_player_4 = false, int _fu_score = 20,
                int _fan_score = 0);
-
-    TurnResult(QString *description);
+    /** Manual score constructors */
+    TurnResult(std::vector<int> scores);
 
     /**
      * @brief Construct a new Turn Result object from a descriptive string
      */
-    TurnResult(const std::string &turn_string);
+    TurnResult(int n_players, QString *description);
 
     /**
      * @brief Compute the score differential for each player after the round
@@ -47,16 +47,22 @@ class TurnResult {
     int fanScore() const;
 
   private:
-    int east_player_;     /**< Number of East player */
-    int winner_;          /**< Number of the winner */
-    bool ron_victory_;    /**< Is the victory by ron */
-    int loser_;           /**< Number of the loser if any */
-    bool riichi_player_1; /**< Is Player 1 riichi */
-    bool riichi_player_2; /**< Is Player 2 riichi */
-    bool riichi_player_3; /**< Is Player 3 riichi */
-    bool riichi_player_4; /**< Is Player 4 riichi */
-    int fu_score_;        /**< Fu score obtained */
-    int fan_score_;       /**< Bonus Fan score obtained */
+    int east_player_; /**< Number of East player */
+    int winner_;      /**< Number of the winner */
+    /** Is the victory by ron or is it a manual result
+     *  0 means tsumo victory
+     *  1 means ron victory
+     *  2 means manual result (other)
+     */
+    int ron_victory_;
+    std::vector<int> scores_; /**< Score changes in case of manual result */
+    int loser_;               /**< Number of the loser if any */
+    bool riichi_player_1;     /**< Is Player 1 riichi */
+    bool riichi_player_2;     /**< Is Player 2 riichi */
+    bool riichi_player_3;     /**< Is Player 3 riichi */
+    bool riichi_player_4;     /**< Is Player 4 riichi */
+    int fu_score_;            /**< Fu score obtained */
+    int fan_score_;           /**< Bonus Fan score obtained */
 
     /**
      * @brief Double-entry tabular corresponding to what each player must pay in

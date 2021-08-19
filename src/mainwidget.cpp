@@ -60,14 +60,18 @@ void MainWidget::addResult() {
 
     // Popup the add result dialog
     if (add_result_dialog.exec() == QDialog::Accepted) {
-        score_model_->addTurnResult(TurnResult(
-            add_result_dialog.EastPlayer(), add_result_dialog.Winner(),
-            add_result_dialog.RonVictory(), add_result_dialog.Loser(),
-            add_result_dialog.Player1DidRiichi(),
-            add_result_dialog.Player2DidRiichi(),
-            add_result_dialog.Player3DidRiichi(),
-            add_result_dialog.Player4DidRiichi(), add_result_dialog.FuScore(),
-            add_result_dialog.FanScore()));
+        if (add_result_dialog.RonVictory() <= 1) {
+            score_model_->addTurnResult(TurnResult(
+                add_result_dialog.EastPlayer(), add_result_dialog.Winner(),
+                add_result_dialog.RonVictory(), add_result_dialog.Loser(),
+                add_result_dialog.Player1DidRiichi(),
+                add_result_dialog.Player2DidRiichi(),
+                add_result_dialog.Player3DidRiichi(),
+                add_result_dialog.Player4DidRiichi(),
+                add_result_dialog.FuScore(), add_result_dialog.FanScore()));
+        } else { // Manual score
+            score_model_->addTurnResult(add_result_dialog.ManualScores());
+        }
         score_view_->resizeColumnsToContents();
     }
 }

@@ -191,7 +191,7 @@ bool ScoreModel::loadFromTextStream(QTextStream &in) {
 
     /* Read the turn results */
     while (in.readLineInto(&line)) {
-        turn_results_.push_back(TurnResult(&line));
+        turn_results_.push_back(TurnResult(read_n_players, &line));
     }
 
     // Recompute scores
