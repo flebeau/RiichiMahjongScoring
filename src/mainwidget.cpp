@@ -22,6 +22,11 @@ MainWidget::MainWidget(QWidget *parent, ScoreModel *_score_model)
     // Set score view stretch parameters
     score_view_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
+    // Set score view row height
+    score_view_->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    score_view_->verticalHeader()->setDefaultSectionSize(
+        score_view_->verticalHeader()->defaultSectionSize() * 1.3334);
+
     // Define the layout of the main widget
     QGridLayout *main_layout = new QGridLayout;
     main_layout->addWidget(score_view_, 0, 0, 4, 1);

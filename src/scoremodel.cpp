@@ -1,5 +1,6 @@
 #include "scoremodel.hpp"
 #include <QBrush>
+#include <QColor>
 #include <iostream>
 
 ScoreModel::ScoreModel(QObject *parent, N_Players _n_players,
@@ -21,7 +22,7 @@ int ScoreModel::rowCount(const QModelIndex & /* parent */) const {
 }
 
 int ScoreModel::columnCount(const QModelIndex & /* parent */) const {
-    return scores_[0].size() + 1;
+    return scores_[0].size();
 }
 
 QVariant ScoreModel::data(const QModelIndex &index, int role) const {
@@ -44,23 +45,23 @@ QVariant ScoreModel::data(const QModelIndex &index, int role) const {
                     scores_[index.row()][index.column()] -
                     scores_[index.row() - 1][index.column()]);
             }
-        } else {
-            int sum = 0;
-            for (unsigned j = 0; j < scores_[0].size(); j++) {
-                sum += scores_[index.row()][j];
-            }
-            cell_content = QString("%1").arg(sum);
-        }
+        } /* else {
+             int sum = 0;
+             for (unsigned j = 0; j < scores_[0].size(); j++) {
+                 sum += scores_[index.row()][j];
+             }
+             cell_content = QString("%1").arg(sum);
+         }*/
         return cell_content;
     } else if (role == Qt::BackgroundRole) {
         if (index.row() > 0 &&
             index.column() < static_cast<int>(scores_[0].size())) {
             if (scores_[index.row()][index.column()] <
                 scores_[index.row() - 1][index.column()]) {
-                return QBrush(Qt::red);
+                return QBrush(QColor(255, 84, 82, 190));
             } else if (scores_[index.row()][index.column()] >
                        scores_[index.row() - 1][index.column()]) {
-                return QBrush(Qt::green);
+                return QBrush(QColor(82, 255, 99, 190));
             }
         }
     }

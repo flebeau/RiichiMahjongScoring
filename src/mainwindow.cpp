@@ -15,7 +15,7 @@ MainWindow::MainWindow()
     setCentralWidget(main_widget_);
 
     // Resize window
-    resize(700, 740);
+    resize(700, 700);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
