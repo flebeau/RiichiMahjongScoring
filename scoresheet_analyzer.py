@@ -1,4 +1,5 @@
 import os
+import os.path
 import subprocess
 import rich
 from rich.theme import Theme
@@ -11,7 +12,7 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-os.chdir("/home/fabrice/projets_perso/MahjongScoring")
+os.chdir(os.path.dirname(__file__))
 game_results = {}
 mss_files = []
 for file in os.listdir("scoresheets"):
