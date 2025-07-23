@@ -47,6 +47,7 @@ class MainWindow : public QMainWindow {
      * @brief Load file slot
      */
     void load();
+    void testHandSelector();
 
   private:
     /**

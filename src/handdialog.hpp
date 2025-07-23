@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QBoxLayout>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
@@ -10,8 +11,8 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <QWidget>
 #include <array>
-#include <qwidget.h>
 
 #include "tile.hpp"
 
@@ -21,6 +22,8 @@ class TileSelector : public QWidget {
     TileSelector(QWidget *parent, bool chii_selector = true);
 
     Tile value() const;
+
+  public slots:
     void setChii(bool chii);
 
   private slots:
@@ -81,7 +84,7 @@ class HandDialog : public QDialog {
      * @brief Slot called when the hand type is changed
      *
      */
-    void handTypeChanged();
+    // void handTypeChanged();
 
   private:
     /*** Widgets used ***/

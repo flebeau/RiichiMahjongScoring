@@ -1,6 +1,7 @@
 #include <QtWidgets>
 #include <iostream>
 
+#include "handdialog.hpp"
 #include "howtoscoredialog.hpp"
 #include "mainwindow.hpp"
 #include "newgamedialog.hpp"
@@ -112,6 +113,11 @@ void MainWindow::load() {
     }
 }
 
+void MainWindow::testHandSelector() {
+    HandDialog dialog(this);
+    dialog.exec();
+}
+
 void MainWindow::createActions() {
     /* Create Menus */
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
@@ -166,6 +172,9 @@ void MainWindow::createActions() {
         tr("Show the RiichiMahjongSolving application About box"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
     helpMenu->addAction(aboutAct);
+    QAction *testAct = new QAction("Testing hand selector", this);
+    connect(testAct, &QAction::triggered, this, &MainWindow::testHandSelector);
+    helpMenu->addAction(testAct);
 
     /* How to score action */
     const QIcon howToIcon = QIcon::fromTheme("help-faq");

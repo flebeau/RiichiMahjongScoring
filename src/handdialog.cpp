@@ -1,7 +1,6 @@
 #include "handdialog.hpp"
 #include "tile.hpp"
-#include <QtWidgets>
-#include <qboxlayout.h>
+#include <functional>
 
 TileSelector::TileSelector(QWidget *parent, bool chii_selector)
     : QWidget(parent), chii_(chii_selector), suit_(new QComboBox),
@@ -13,7 +12,7 @@ TileSelector::TileSelector(QWidget *parent, bool chii_selector)
         suit_->addItem("Honor", HONOR);
     }
 
-    connect(suit_, &QComboBox::currentIndexChanged, this,
+    connect(suit_, &QComboBox::currentTextChanged, this,
             &TileSelector::suitChanged);
 
     QHBoxLayout *layout = new QHBoxLayout;
@@ -81,7 +80,7 @@ bool ClassicGroup::isMelded() const { return melded_->isChecked(); }
 
 Tile ClassicGroup::firstTile() const { return first_tile_->value(); }
 
-void ClassicGroup::typeChanged() { first_tile_->setChii(chii_->isChecked()); }
+void ClassicGroup::typeChanged() { first_tile_->setChii(chi_->isChecked()); }
 
 DuoGroup::DuoGroup(QWidget *parent)
     : QGroupBox(parent), tile_selector_(new TileSelector(this, false)),
@@ -102,4 +101,11 @@ HandDialog::HandDialog(QWidget *parent)
     hand_type->addItem("Classic");
     hand_type->addItem("Seven pairs");
     hand_type->addItem("Thirteen orphans");
+
+    /* Create the layout */
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(hand_type);
+    layout->addWidget(new ClassicGroup(this));
+    layout->addWidget(new DuoGroup(this));
+    setLayout(layout);
 }
