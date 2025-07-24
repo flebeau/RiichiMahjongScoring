@@ -4,22 +4,24 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
+#include <QGridLayout>
 #include <QGroupBox>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <QVBoxLayout>
 #include <QWidget>
-#include <array>
 
 #include "tile.hpp"
 
 class TileSelector : public QWidget {
     Q_OBJECT
   public:
-    TileSelector(QWidget *parent, bool chii_selector = true);
+    TileSelector(QWidget *parent = nullptr, bool chii_selector = true);
 
     Tile value() const;
 
@@ -38,7 +40,7 @@ class TileSelector : public QWidget {
 class ClassicGroup : public QGroupBox {
     Q_OBJECT
   public:
-    ClassicGroup(QWidget *parent);
+    ClassicGroup(QWidget *parent = nullptr);
 
     bool isChi() const;
     bool isPon() const;
@@ -46,13 +48,14 @@ class ClassicGroup : public QGroupBox {
     bool isMelded() const;
     Tile firstTile() const;
 
+  signals:
+    void typeChanged(bool chii);
+
   private slots:
-    void typeChanged();
+    void onTypeChanged();
 
   private:
-    QRadioButton *chi_;
-    QRadioButton *pon_;
-    QRadioButton *kan_;
+    QComboBox *type_;
     TileSelector *first_tile_;
     QCheckBox *melded_;
 };
@@ -60,7 +63,7 @@ class ClassicGroup : public QGroupBox {
 class DuoGroup : public QGroupBox {
     Q_OBJECT
   public:
-    DuoGroup(QWidget *parent);
+    DuoGroup(QWidget *parent = nullptr);
 
     bool isMelded() const;
     Tile tile() const;
@@ -77,7 +80,7 @@ class DuoGroup : public QGroupBox {
 class HandDialog : public QDialog {
     Q_OBJECT
   public:
-    HandDialog(QWidget *parent);
+    HandDialog(QWidget *parent = nullptr);
 
   private slots:
     /**
@@ -88,8 +91,10 @@ class HandDialog : public QDialog {
 
   private:
     /*** Widgets used ***/
-    QComboBox *hand_type; /**< Hand type selector (Classic, Seven pairs,
-                          Thirteen orphans) */
+    QTabWidget *tabs_;
+    QWidget *classic_tab_; /**< Tab for classic hand (3 + 3 + 3 + 3 + 2) */
+    QWidget *seven_pairs_tab_;
+    QWidget *thirteen_orphans_tab_;
     /* For classic hand */
     ClassicGroup *first_group;
     ClassicGroup *second_group;
@@ -97,5 +102,5 @@ class HandDialog : public QDialog {
     ClassicGroup *fourth_group;
     DuoGroup *duo_group;
     /* For seven pairs */
-    DuoGroup *seven_pairs_groups[7];
+    DuoGroup *seven_pairs_groups_[7];
 };
