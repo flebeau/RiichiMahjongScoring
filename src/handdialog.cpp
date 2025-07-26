@@ -1,7 +1,8 @@
 #include "handdialog.hpp"
 #include "tile.hpp"
+#include <QtWidgets>
 #include <functional>
-#include <qnamespace.h>
+#include <qgroupbox.h>
 
 TileSelector::TileSelector(QWidget *parent, bool chii_selector)
     : QWidget(parent), chii_(chii_selector), suit_(new QComboBox),
@@ -64,7 +65,7 @@ void TileSelector::suitChanged() {
     value_->updateGeometry();
 }
 
-ClassicGroup::ClassicGroup(QWidget *parent)
+ClassicGroupSelector::ClassicGroupSelector(QWidget *parent)
     : QGroupBox(parent), type_(new QComboBox),
       first_tile_(new TileSelector(nullptr, true)),
       melded_(new QCheckBox("Melded")) {
@@ -72,8 +73,8 @@ ClassicGroup::ClassicGroup(QWidget *parent)
     type_->addItem("Pon");
     type_->addItem("Kan");
     connect(type_, &QComboBox::currentTextChanged, this,
-            &ClassicGroup::onTypeChanged);
-    connect(this, &ClassicGroup::typeChanged, first_tile_,
+            &ClassicGroupSelector::onTypeChanged);
+    connect(this, &ClassicGroupSelector::typeChanged, first_tile_,
             &TileSelector::setChii);
     QHBoxLayout *layout = new QHBoxLayout;
     layout->setAlignment(Qt::AlignCenter);
@@ -84,36 +85,43 @@ ClassicGroup::ClassicGroup(QWidget *parent)
     setTitle("Group");
 }
 
-bool ClassicGroup::isChi() const { return type_->currentText() == "Chi"; }
-bool ClassicGroup::isPon() const { return type_->currentText() == "Pon"; }
-bool ClassicGroup::isKan() const { return type_->currentText() == "Kan"; }
-bool ClassicGroup::isMelded() const { return melded_->isChecked(); }
+bool ClassicGroupSelector::isChi() const {
+    return type_->currentText() == "Chi";
+}
+bool ClassicGroupSelector::isPon() const {
+    return type_->currentText() == "Pon";
+}
+bool ClassicGroupSelector::isKan() const {
+    return type_->currentText() == "Kan";
+}
+bool ClassicGroupSelector::isMelded() const { return melded_->isChecked(); }
 
-Tile ClassicGroup::firstTile() const { return first_tile_->value(); }
+Tile ClassicGroupSelector::firstTile() const { return first_tile_->value(); }
 
-void ClassicGroup::onTypeChanged() { emit typeChanged(isChi()); }
+void ClassicGroupSelector::onTypeChanged() { emit typeChanged(isChi()); }
 
-DuoGroup::DuoGroup(QWidget *parent)
-    : QGroupBox(parent), tile_selector_(new TileSelector(this, false)),
-      melded_(new QCheckBox("Melded")) {
-    melded_->setChecked(false);
+DuoGroupSelector::DuoGroupSelector(QWidget *parent)
+    : QGroupBox(parent), tile_selector_(new TileSelector(this, false)) {
     QHBoxLayout *layout = new QHBoxLayout;
     layout->addWidget(tile_selector_);
-    layout->addWidget(melded_);
     layout->setAlignment(Qt::AlignCenter);
     setLayout(layout);
     setTitle("Duo");
 }
 
-Tile DuoGroup::tile() const { return tile_selector_->value(); }
-bool DuoGroup::isMelded() const { return melded_->isChecked(); }
+Tile DuoGroupSelector::tile() const { return tile_selector_->value(); }
 
 HandDialog::HandDialog(QWidget *parent)
     : QDialog(parent), tabs_(new QTabWidget), classic_tab_(new QWidget),
       seven_pairs_tab_(new QWidget), thirteen_orphans_tab_(new QWidget),
-      first_group(new ClassicGroup), second_group(new ClassicGroup),
-      third_group(new ClassicGroup), fourth_group(new ClassicGroup),
-      duo_group(new DuoGroup) {
+      first_group(new ClassicGroupSelector),
+      second_group(new ClassicGroupSelector),
+      third_group(new ClassicGroupSelector),
+      fourth_group(new ClassicGroupSelector), duo_group(new DuoGroupSelector),
+      ron_button_(new QRadioButton(tr("Ron"))),
+      tsumo_button_(new QRadioButton(tr("Tsumo"))), doras_(new QSpinBox),
+      riichi_button_(new QCheckBox(tr("Riichi"))),
+      ippatsu_button_(new QCheckBox(tr("Ippatsu"))) {
     /* Create the classic tab */
     QVBoxLayout *classic_layout = new QVBoxLayout;
 
@@ -132,17 +140,49 @@ HandDialog::HandDialog(QWidget *parent)
     /* Create the seven pairs tab */
     QGridLayout *seven_pairs_layout = new QGridLayout;
     for (int i = 0; i < 6; i++) {
-        seven_pairs_groups_[i] = new DuoGroup;
+        seven_pairs_groups_[i] = new DuoGroupSelector;
         seven_pairs_layout->addWidget(seven_pairs_groups_[i], i / 2,
                                       2 * (i % 2), 1, 2);
     }
-    seven_pairs_groups_[6] = new DuoGroup;
+    seven_pairs_groups_[6] = new DuoGroupSelector;
     seven_pairs_layout->addWidget(seven_pairs_groups_[6], 3, 1, 1, 2);
     seven_pairs_tab_->setLayout(seven_pairs_layout);
     tabs_->addTab(seven_pairs_tab_, "Seven pairs");
 
+    /* Add other informations */
+    QGridLayout *victory_infos_layout = new QGridLayout;
+
+    QGroupBox *tsumo_ron = new QGroupBox(tr("Tsumo or Ron"));
+    QHBoxLayout *tsumo_ron_layout = new QHBoxLayout;
+    tsumo_ron_layout->addWidget(tsumo_button_);
+    tsumo_ron_layout->addWidget(ron_button_);
+    tsumo_ron->setLayout(tsumo_ron_layout);
+    tsumo_button_->setChecked(true);
+
+    victory_infos_layout->addWidget(tsumo_ron, 0, 0, 1, 2);
+    doras_->setMinimum(0);
+    doras_->setMaximum(99);
+    doras_->setValue(0);
+    QGroupBox *doras = new QGroupBox(tr("Doras (total)"));
+    QHBoxLayout *doras_layout = new QHBoxLayout;
+    doras_layout->addWidget(doras_);
+    doras->setLayout(doras_layout);
+    victory_infos_layout->addWidget(doras, 0, 2, 1, 1);
+
+    QGroupBox *riichi = new QGroupBox(tr("Riichi"));
+    QHBoxLayout *riichi_layout = new QHBoxLayout;
+    riichi_layout->addWidget(riichi_button_);
+    riichi_layout->addWidget(ippatsu_button_);
+    riichi->setLayout(riichi_layout);
+    victory_infos_layout->addWidget(riichi, 1, 0, 1, 1);
+    connect(riichi_button_, &QRadioButton::toggled, ippatsu_button_,
+            &QRadioButton::setEnabled);
+    riichi_button_->setChecked(false);
+    ippatsu_button_->setEnabled(false);
+
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(tabs_);
+    layout->addLayout(victory_infos_layout);
     setLayout(layout);
-    setWindowTitle("Hand");
+    setWindowTitle(tr("Winning Hand"));
 }

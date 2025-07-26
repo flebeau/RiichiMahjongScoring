@@ -15,6 +15,8 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <qcheckbox.h>
+#include <qradiobutton.h>
 
 #include "tile.hpp"
 
@@ -37,10 +39,10 @@ class TileSelector : public QWidget {
     QComboBox *value_;
 };
 
-class ClassicGroup : public QGroupBox {
+class ClassicGroupSelector : public QGroupBox {
     Q_OBJECT
   public:
-    ClassicGroup(QWidget *parent = nullptr);
+    ClassicGroupSelector(QWidget *parent = nullptr);
 
     bool isChi() const;
     bool isPon() const;
@@ -60,17 +62,15 @@ class ClassicGroup : public QGroupBox {
     QCheckBox *melded_;
 };
 
-class DuoGroup : public QGroupBox {
+class DuoGroupSelector : public QGroupBox {
     Q_OBJECT
   public:
-    DuoGroup(QWidget *parent = nullptr);
+    DuoGroupSelector(QWidget *parent = nullptr);
 
-    bool isMelded() const;
     Tile tile() const;
 
   private:
     TileSelector *tile_selector_;
-    QCheckBox *melded_;
 };
 
 /**
@@ -82,13 +82,6 @@ class HandDialog : public QDialog {
   public:
     HandDialog(QWidget *parent = nullptr);
 
-  private slots:
-    /**
-     * @brief Slot called when the hand type is changed
-     *
-     */
-    // void handTypeChanged();
-
   private:
     /*** Widgets used ***/
     QTabWidget *tabs_;
@@ -96,11 +89,17 @@ class HandDialog : public QDialog {
     QWidget *seven_pairs_tab_;
     QWidget *thirteen_orphans_tab_;
     /* For classic hand */
-    ClassicGroup *first_group;
-    ClassicGroup *second_group;
-    ClassicGroup *third_group;
-    ClassicGroup *fourth_group;
-    DuoGroup *duo_group;
+    ClassicGroupSelector *first_group;
+    ClassicGroupSelector *second_group;
+    ClassicGroupSelector *third_group;
+    ClassicGroupSelector *fourth_group;
+    DuoGroupSelector *duo_group;
     /* For seven pairs */
-    DuoGroup *seven_pairs_groups_[7];
+    DuoGroupSelector *seven_pairs_groups_[7];
+    /* Other information for computing fu and fans */
+    QRadioButton *ron_button_;
+    QRadioButton *tsumo_button_;
+    QSpinBox *doras_;
+    QCheckBox *riichi_button_;
+    QCheckBox *ippatsu_button_;
 };

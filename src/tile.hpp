@@ -19,12 +19,13 @@ enum class HonorValue {
 
 class Tile {
   public:
-    Tile(char suit, int value);
+    Tile(char suit = BAMBOO, int value = 1);
     QString toString() const;
     char suit() const;
     int value() const;
     bool isHonor() const;
     bool isTerminal() const;
+    bool isOrphan() const;
 
   private:
     char suit_;
