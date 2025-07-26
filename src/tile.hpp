@@ -24,6 +24,8 @@ class Tile {
     char suit() const;
     int value() const;
     bool isHonor() const;
+    bool isDragon() const;
+    bool isWind() const;
     bool isTerminal() const;
     bool isOrphan() const;
 

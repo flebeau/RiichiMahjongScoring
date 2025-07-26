@@ -6,6 +6,8 @@ QString Tile::toString() const { return QString::number(value_) + suit_; }
 char Tile::suit() const { return suit_; }
 int Tile::value() const { return value_; }
 bool Tile::isHonor() const { return suit_ == HONOR; }
+bool Tile::isDragon() const { return isHonor() && (value_ >= 5); }
+bool Tile::isWind() const { return isHonor() && (value_ <= 4); }
 bool Tile::isTerminal() const {
     return !isHonor() && (value_ == 1 || value_ == 9);
 }

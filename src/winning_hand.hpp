@@ -1,22 +1,34 @@
 #pragma once
 
 #include "tile.hpp"
+#include <QVector>
+#include <qvector.h>
 
 enum class HandType { CLASSIC, PAIRS, ORPHANS };
 
 enum class ClassicGroupType { CHII, PON, KAN };
 
 typedef struct ClassicGroup {
-    ClassicGroupType type = ClassicGroupType::CHII;
+    ClassicGroupType type;
     Tile tile;
     bool melded = false;
+    ClassicGroup(const ClassicGroupType &type_in = ClassicGroupType::CHII,
+                 const Tile &tile_in = Tile(), bool melded_in = false)
+        : type(type_in), tile(tile_in), melded(melded_in) {}
     QString toString() const;
+    bool isSimple() const;
 } ClassicGroup;
 
 typedef struct ClassicHand {
     ClassicGroup groups[4];
     Tile duo_tile;
     QString toString() const;
+    ClassicHand(const ClassicGroup &first_group,
+                const ClassicGroup &second_group,
+                const ClassicGroup &third_group,
+                const ClassicGroup &fourth_group, const Tile &duo_tile)
+        : groups{first_group, second_group, third_group, fourth_group},
+          duo_tile(duo_tile) {}
 } ClassicHand;
 
 union HandTiles {
@@ -24,6 +36,7 @@ union HandTiles {
     Tile seven_pairs_hand[7];
     Tile duo_orphans_hand;
 
+    HandTiles() {}
     HandTiles(const ClassicHand &classic_hand) : classic_hand(classic_hand) {}
     HandTiles(Tile seven_pairs[7])
         : seven_pairs_hand{seven_pairs[0], seven_pairs[1], seven_pairs[2],
@@ -39,13 +52,35 @@ typedef struct ValidityStatus {
         : valid(valid_in), message(message_in) {}
 } ValidityStatus;
 
-typedef struct HandScore {
-    int fu;
-    int fan;
-} HandScore;
+typedef struct ValueDetail {
+    int value;
+    QString detail;
+    ValueDetail(int value_in = 0, const QString &detail_in = "")
+        : value(value_in), detail(detail_in) {}
+} ValueDetail;
+
+class HandScore {
+  public:
+    HandScore();
+
+    int totalFu() const;
+    int totalFan() const;
+    const QVector<ValueDetail> &fuDetails() const;
+    const QVector<ValueDetail> &yakus() const;
+
+    void addFu(int fu, const QString &detail);
+    void addYaku(int fan, const QString &detail);
+
+  private:
+    int fu_;
+    QVector<ValueDetail> fu_details_;
+    int fan_;
+    QVector<ValueDetail> yakus_;
+};
 
 class WinningHand {
   public:
+    WinningHand(){};
     WinningHand(const ClassicHand &classic_hand, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
     WinningHand(Tile seven_pairs_hand[7], bool riichi = false,
@@ -58,6 +93,9 @@ class WinningHand {
     bool isRiichi() const;
     bool isIppatsu() const;
     bool isRon() const;
+    bool isTsumo() const;
+    bool isClosed() const;
+    bool isOpen() const;
     int totalDoras() const;
     QString toString() const;
 

@@ -15,10 +15,10 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <qcheckbox.h>
-#include <qradiobutton.h>
+#include <qlabel.h>
 
 #include "tile.hpp"
+#include "winning_hand.hpp"
 
 class TileSelector : public QWidget {
     Q_OBJECT
@@ -31,7 +31,11 @@ class TileSelector : public QWidget {
     void setChii(bool chii);
 
   private slots:
-    void suitChanged();
+    void onSuitChange();
+    void onValueChange();
+
+  signals:
+    void Changed();
 
   private:
     bool chii_;
@@ -49,12 +53,15 @@ class ClassicGroupSelector : public QGroupBox {
     bool isKan() const;
     bool isMelded() const;
     Tile firstTile() const;
+    ClassicGroup value() const;
 
   signals:
     void typeChanged(bool chii);
+    void Changed();
 
   private slots:
     void onTypeChanged();
+    void onChange();
 
   private:
     QComboBox *type_;
@@ -68,6 +75,10 @@ class DuoGroupSelector : public QGroupBox {
     DuoGroupSelector(QWidget *parent = nullptr);
 
     Tile tile() const;
+  private slots:
+    void onChange();
+  signals:
+    void Changed();
 
   private:
     TileSelector *tile_selector_;
@@ -82,18 +93,24 @@ class HandDialog : public QDialog {
   public:
     HandDialog(QWidget *parent = nullptr);
 
+  private slots:
+    void onChange();
+
   private:
+    void updateScoreText();
+
+    WinningHand hand_represented_;
     /*** Widgets used ***/
     QTabWidget *tabs_;
     QWidget *classic_tab_; /**< Tab for classic hand (3 + 3 + 3 + 3 + 2) */
     QWidget *seven_pairs_tab_;
     QWidget *thirteen_orphans_tab_;
     /* For classic hand */
-    ClassicGroupSelector *first_group;
-    ClassicGroupSelector *second_group;
-    ClassicGroupSelector *third_group;
-    ClassicGroupSelector *fourth_group;
-    DuoGroupSelector *duo_group;
+    ClassicGroupSelector *first_group_;
+    ClassicGroupSelector *second_group_;
+    ClassicGroupSelector *third_group_;
+    ClassicGroupSelector *fourth_group_;
+    DuoGroupSelector *duo_group_;
     /* For seven pairs */
     DuoGroupSelector *seven_pairs_groups_[7];
     /* Other information for computing fu and fans */
@@ -102,4 +119,6 @@ class HandDialog : public QDialog {
     QSpinBox *doras_;
     QCheckBox *riichi_button_;
     QCheckBox *ippatsu_button_;
+    /* Score display */
+    QLabel *score_text_;
 };

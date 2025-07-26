@@ -16,6 +16,10 @@ QString ClassicGroup::toString() const {
     return groupTypeToString(type) + tile.toString() +
            (melded ? MELDED_CHAR : "");
 }
+bool ClassicGroup::isSimple() const {
+    return (!tile.isHonor()) && (tile.value() > 1) &&
+           ((type != ClassicGroupType::CHII) || (tile.value() < 7));
+}
 
 QString duoToString(const Tile &tile) { return "D" + tile.toString(); }
 
@@ -26,6 +30,22 @@ QString ClassicHand::toString() const {
     }
     result += duoToString(duo_tile);
     return result;
+}
+
+HandScore::HandScore() : fu_(20), fan_(0) {}
+
+int HandScore::totalFu() const { return fu_; }
+int HandScore::totalFan() const { return fan_; }
+const QVector<ValueDetail> &HandScore::fuDetails() const { return fu_details_; }
+const QVector<ValueDetail> &HandScore::yakus() const { return yakus_; }
+
+void HandScore::addFu(int fu, const QString &detail) {
+    fu_ += fu;
+    fu_details_.append(ValueDetail{fu, detail});
+}
+void HandScore::addYaku(int fan, const QString &detail) {
+    fan_ += fan;
+    yakus_.append(ValueDetail{fan, detail});
 }
 
 WinningHand::WinningHand(const ClassicHand &classic_hand, bool riichi,
@@ -46,6 +66,14 @@ HandTiles WinningHand::hand() const { return hand_; }
 bool WinningHand::isRiichi() const { return riichi_; }
 bool WinningHand::isIppatsu() const { return ippatsu_; }
 bool WinningHand::isRon() const { return ron_; }
+bool WinningHand::isTsumo() const { return !ron_; }
+bool WinningHand::isClosed() const {
+    return (type_ != HandType::CLASSIC) ||
+           (!hand_.classic_hand.groups[0].melded &&
+            !hand_.classic_hand.groups[1].melded &&
+            !hand_.classic_hand.groups[2].melded &&
+            !hand_.classic_hand.groups[3].melded);
+}
 int WinningHand::totalDoras() const { return total_doras_; }
 
 QString WinningHand::toString() const {
@@ -96,10 +124,99 @@ ValidityStatus WinningHand::checkValid() const {
 
 HandScore WinningHand::computeScore() const {
     HandScore score;
-    score.fu = 20;
-    score.fan = 0;
 
-    // TODO: Compute score
+    /* Compute fu */
+    if (type_ == HandType::PAIRS) {
+        score.addFu(5, "Seven Pairs");
+    } else if (type_ == HandType::ORPHANS) {
+        // TODO
+    } else { // Classic
+        // Handle pair
+        if (hand_.classic_hand.duo_tile.isDragon()) {
+            score.addFu(2, "Dragon Pair");
+        }
+        // TODO Dominant and seat winds
+        // Handle pons (including kans)
+        for (int i = 0; i < 4; i++) {
+            if (hand_.classic_hand.groups[i].type == ClassicGroupType::CHII) {
+                continue;
+            }
+            int value = 2;
+            QString expl;
+            if (!hand_.classic_hand.groups[i].melded) {
+                value *= 2;
+                expl += "Concealed ";
+            } else {
+                expl += "Melded ";
+            }
+            if (hand_.classic_hand.groups[i].tile.isOrphan()) {
+                value *= 2;
+                expl += "major ";
+            } else {
+                expl += "simple ";
+            }
+            if (hand_.classic_hand.groups[i].type == ClassicGroupType::KAN) {
+                value *= 4;
+                expl += "kan";
+            } else {
+                expl += "pon";
+            }
+            score.addFu(value, expl);
+        }
+    }
+
+    if (type_ != HandType::PAIRS && isTsumo() && score.totalFu() > 20) {
+        score.addFu(2, "Tsumo not Pinfu");
+    }
+
+    // Handle pinfu
+    if (type_ == HandType::CLASSIC && score.totalFu() == 20) {
+        score.addYaku(1, "Pinfu");
+    }
+    if (type_ != HandType::PAIRS && isClosed() && isRon()) {
+        score.addFu(10, "Closed Hand won by ron");
+    }
+
+    /* Compute fans */
+    if (isRiichi()) {
+        score.addYaku(1, "Riichi");
+    }
+    if (isIppatsu()) {
+        score.addYaku(1, "Ippatsu");
+    }
+    if (isClosed() && isTsumo()) {
+        score.addYaku(1, "Fully concealed hand");
+    }
+    if (type_ == HandType::PAIRS) {
+        score.addYaku(2, "Seven pairs");
+    }
+    // TODO Handle twice double chii
+    if (type_ == HandType::CLASSIC) {
+        int n_simple = 0, n_chii = 0, n_concealed_pon = 0, n_pon = 0;
+        for (const auto &group : hand_.classic_hand.groups) {
+            if (group.isSimple()) {
+                n_simple += 1;
+            }
+            if (group.type == ClassicGroupType::CHII) {
+                n_chii += 1;
+            } else { // Pon or Kan
+                n_pon += 1;
+                if (!group.melded) {
+                    n_concealed_pon += 1;
+                }
+                if (group.tile.isDragon()) {
+                    score.addYaku(1, "Dragon pon");
+                }
+                // TODO Handle dominant and seat winds pon
+            }
+        }
+        if (n_simple == 4 && !hand_.classic_hand.duo_tile.isOrphan()) {
+            score.addYaku(1, "All simple");
+        }
+    }
+    if (total_doras_ > 0) {
+        score.addYaku(total_doras_, "Doras");
+    }
 
     return score;
 }
