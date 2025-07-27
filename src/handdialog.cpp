@@ -182,14 +182,18 @@ HandDialog::HandDialog(QWidget *parent)
     /* Add other informations */
     QGridLayout *victory_infos_layout = new QGridLayout;
 
-    QGroupBox *tsumo_ron = new QGroupBox(tr("Tsumo or Ron"));
-    QHBoxLayout *tsumo_ron_layout = new QHBoxLayout;
-    tsumo_ron_layout->addWidget(tsumo_button_);
-    tsumo_ron_layout->addWidget(ron_button_);
-    tsumo_ron->setLayout(tsumo_ron_layout);
+    QGroupBox *win_by = new QGroupBox(tr("Win by"));
+    QHBoxLayout *win_by_layout = new QHBoxLayout;
     tsumo_button_->setChecked(true);
+    win_by_layout->addWidget(tsumo_button_);
+    win_by_layout->addWidget(ron_button_);
+    riichi_button_->setChecked(false);
+    win_by_layout->addWidget(riichi_button_);
+    ippatsu_button_->setEnabled(false);
+    win_by_layout->addWidget(ippatsu_button_);
+    win_by->setLayout(win_by_layout);
 
-    victory_infos_layout->addWidget(tsumo_ron, 0, 0, 1, 2);
+    victory_infos_layout->addWidget(win_by, 0, 0, 1, 2);
     doras_->setMinimum(0);
     doras_->setMaximum(99);
     doras_->setValue(0);
@@ -197,18 +201,10 @@ HandDialog::HandDialog(QWidget *parent)
     QHBoxLayout *doras_layout = new QHBoxLayout;
     doras_layout->addWidget(doras_);
     doras->setLayout(doras_layout);
-    victory_infos_layout->addWidget(doras, 0, 2, 1, 1);
+    victory_infos_layout->addWidget(doras, 1, 0, 1, 1);
 
-    QGroupBox *riichi = new QGroupBox(tr("Riichi"));
-    QHBoxLayout *riichi_layout = new QHBoxLayout;
-    riichi_layout->addWidget(riichi_button_);
-    riichi_button_->setChecked(false);
-    riichi_layout->addWidget(ippatsu_button_);
-    ippatsu_button_->setEnabled(false);
-    riichi->setLayout(riichi_layout);
-    victory_infos_layout->addWidget(riichi, 1, 0, 1, 1);
-    connect(riichi_button_, &QRadioButton::toggled, ippatsu_button_,
-            &QRadioButton::setEnabled);
+    connect(riichi_button_, &QRadioButton::toggled, this,
+            &HandDialog::onRiichiChange);
 
     score_text_->setWordWrap(true);
 
@@ -240,14 +236,14 @@ HandDialog::HandDialog(QWidget *parent)
 
 void HandDialog::updateScoreText() {
     HandScore score = hand_represented_.computeScore();
-    QString text =
-        "<hr><b>Fu:</b> " + QString::number(score.totalFu()) + " = 20";
+    QString text = "<hr><p><b>Fu:</b> " + QString::number(score.totalFu()) +
+                   (score.fuDetails().size() > 0 ? " = 20" : "");
     for (const auto &fu_detail : score.fuDetails()) {
         text += " + " + QString::number(fu_detail.value);
     }
 
     text += "<br><b>Fan:</b> " + QString::number(score.totalFan()) +
-            "<br><b>Yakus:</b>\n<ul>\n";
+            "</p>\n<b>Yakus:</b>\n<ul>\n";
     // Add yaku names
     for (const auto &yaku : score.yakus()) {
         text += "  <li>" + yaku.detail + " (+" + QString::number(yaku.value) +
@@ -281,4 +277,13 @@ void HandDialog::onChange() {
                         doras_->value());
     }
     updateScoreText();
+}
+
+void HandDialog::onRiichiChange() {
+    if (riichi_button_->isChecked()) {
+        ippatsu_button_->setEnabled(true);
+    } else {
+        ippatsu_button_->setChecked(false);
+        ippatsu_button_->setEnabled(false);
+    }
 }

@@ -59,6 +59,9 @@ typedef struct ValueDetail {
         : value(value_in), detail(detail_in) {}
 } ValueDetail;
 
+static const int MANGAN = 5;
+static const int YAKUMAN = 13;
+
 class HandScore {
   public:
     HandScore();
@@ -70,6 +73,8 @@ class HandScore {
 
     void addFu(int fu, const QString &detail);
     void addYaku(int fan, const QString &detail);
+    void addBetterYaku(int fan, const QString &detail);
+    void addYakuman(const QString &detail, bool doubled = false);
 
   private:
     int fu_;

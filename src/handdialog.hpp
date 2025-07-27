@@ -95,6 +95,7 @@ class HandDialog : public QDialog {
 
   private slots:
     void onChange();
+    void onRiichiChange();
 
   private:
     void updateScoreText();

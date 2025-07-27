@@ -47,6 +47,20 @@ void HandScore::addYaku(int fan, const QString &detail) {
     fan_ += fan;
     yakus_.append(ValueDetail{fan, detail});
 }
+void HandScore::addBetterYaku(int fan, const QString &detail) {
+    fan_ += fan;
+    yakus_.append(ValueDetail{fan, "<b style=\"color: rgba(8, 95, 150, 1);\">" +
+                                       detail + "</b>"});
+}
+void HandScore::addYakuman(const QString &detail, bool doubled) {
+    int value = YAKUMAN;
+    if (doubled)
+        value *= 2;
+    fan_ += value;
+    yakus_.append(
+        ValueDetail{value, "<b style =\"color: rgba(17, 146, 60, 1);\">" +
+                               detail + "</b>"});
+}
 
 WinningHand::WinningHand(const ClassicHand &classic_hand, bool riichi,
                          bool ippatsu, bool ron, int total_doras)
@@ -192,26 +206,87 @@ HandScore WinningHand::computeScore() const {
     }
     // TODO Handle twice double chii
     if (type_ == HandType::CLASSIC) {
-        int n_simple = 0, n_chii = 0, n_concealed_pon = 0, n_pon = 0;
+        int n_simple = 0, n_chii = 0, n_concealed_pon = 0, n_pon = 0, n_kan = 0,
+            n_dragon_pon = 0, n_wind_pon = 0, n_group_with_terminal = 0;
         for (const auto &group : hand_.classic_hand.groups) {
             if (group.isSimple()) {
                 n_simple += 1;
             }
             if (group.type == ClassicGroupType::CHII) {
                 n_chii += 1;
+                if (!group.isSimple()) {
+                    n_group_with_terminal += 1;
+                }
             } else { // Pon or Kan
                 n_pon += 1;
+                if (group.type == ClassicGroupType::KAN) {
+                    n_kan += 1;
+                }
                 if (!group.melded) {
                     n_concealed_pon += 1;
                 }
+                if (group.tile.isTerminal()) {
+                    n_group_with_terminal += 1;
+                }
                 if (group.tile.isDragon()) {
                     score.addYaku(1, "Dragon pon");
+                    n_dragon_pon += 1;
                 }
-                // TODO Handle dominant and seat winds pon
+                if (group.tile.isWind()) {
+                    // TODO Handle dominant and seat winds pon
+                    n_wind_pon += 1;
+                }
             }
         }
+        int n_group_with_orphan =
+            n_group_with_terminal + n_dragon_pon + n_wind_pon;
         if (n_simple == 4 && !hand_.classic_hand.duo_tile.isOrphan()) {
             score.addYaku(1, "All simple");
+        }
+        if (n_pon == 4) {
+            score.addYaku(2, "All pon");
+        }
+        if (n_concealed_pon >= 3) {
+            score.addYaku(2, "Three concealed pon");
+        }
+        if (n_kan == 3) {
+            score.addYaku(2, "Three kan");
+        } else if (n_kan == 4) {
+            score.addYakuman("Four kan");
+        }
+        if (n_dragon_pon == 3) {
+            score.addYakuman("Big Three Dragons");
+        } else if (n_dragon_pon == 2 &&
+                   hand_.classic_hand.duo_tile.isDragon()) {
+            score.addBetterYaku(4, "Little Three Dragons");
+        }
+        if (n_wind_pon == 4) {
+            score.addYakuman("Big Four Winds", true);
+        } else if (n_wind_pon == 3 && hand_.classic_hand.duo_tile.isWind()) {
+            score.addYakuman("Little Four Winds");
+        }
+        // Terminal (and honors) yaku
+        if (n_group_with_orphan == 4 &&
+            hand_.classic_hand.duo_tile.isOrphan()) {
+            if (n_dragon_pon + n_wind_pon == 4 &&
+                hand_.classic_hand.duo_tile.isHonor()) {
+                score.addYakuman("All Honors Hand");
+            } else if (n_group_with_terminal == 4 &&
+                       hand_.classic_hand.duo_tile.isTerminal()) {
+                if (n_chii == 0) {
+                    score.addYakuman("All Terminals Hand");
+                } else {
+                    score.addYaku(2 + (isClosed() ? 1 : 0),
+                                  (isClosed() ? "Closed" : "Open") +
+                                      QString(" Pure Outside Hand"));
+                }
+            } else if (n_chii == 0) {
+                score.addYaku(2, "All Terminals and Honors Hand");
+            } else {
+                score.addYaku(1 + (isClosed() ? 1 : 0),
+                              (isClosed() ? "Closed" : "Open") +
+                                  QString(" Mixed Outside Hand"));
+            }
         }
     }
     if (total_doras_ > 0) {
