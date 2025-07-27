@@ -97,6 +97,7 @@ class WinningHand {
     WinningHand(Tile duo_orphans_hand, const Tile &dominant_wind,
                 const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
+    WinningHand(const QString &description);
 
     HandType type() const;
     HandTiles hand() const;
@@ -108,6 +109,8 @@ class WinningHand {
     bool isOpen() const;
     int totalDoras() const;
     QString toString() const;
+    const Tile &dominantWind() const;
+    const Tile &playerWind() const;
 
     /* Scoring methods */
     ValidityStatus checkValid() const;

@@ -9,9 +9,11 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <qpushbutton.h>
 #include <vector>
 
 #include "scoremodel.hpp"
+#include "winning_hand.hpp"
 
 /**
  * @brief Implements the dialog for adding the result of a turn
@@ -92,6 +94,8 @@ class AddResultDialog : public QDialog {
      */
     unsigned FanScore() const;
 
+    const WinningHand *winningHand() const;
+
   private slots:
     /**
      * @brief Refresh the list of potential losers depending on the selected
@@ -102,6 +106,7 @@ class AddResultDialog : public QDialog {
      * @brief Show the How to Score message box
      */
     void showHelp();
+    void showHandDialog();
 
   private:
     /**
@@ -153,6 +158,7 @@ class AddResultDialog : public QDialog {
     QSpinBox *fu_selector_;      /**< Fu score selector */
     QLabel *fan_label_;          /**< Fan label */
     QSpinBox *fan_selector_;     /**< Fan score selector */
+    QPushButton *hand_dialog_button_; /**< Button to open hand dialog */
     QLabel *label_manual_player_1_;   /**< Label for manual score */
     QSpinBox *score_manual_player_1_; /**< Manual score selector */
     QLabel *label_manual_player_2_;   /**< Label for manual score */
@@ -167,4 +173,6 @@ class AddResultDialog : public QDialog {
     QPushButton *confirm_button_;     /**< Confirm button */
     QPushButton *cancel_button_;      /**< Cancel button */
     QPushButton *help_button_;        /**< Help button */
+
+    WinningHand *hand_ = nullptr;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "winning_hand.hpp"
 #include <QTextStream>
 #include <vector>
 
@@ -13,9 +14,11 @@ class TurnResult {
                int _loser = 0, bool _riichi_player_1 = false,
                bool _riichi_player_2 = false, bool _riichi_player_3 = false,
                bool _riichi_player_4 = false, int _fu_score = 20,
-               int _fan_score = 0);
+               int _fan_score = 0, const WinningHand *hand = nullptr);
     /** Manual score constructors */
     TurnResult(std::vector<int> scores);
+
+    ~TurnResult();
 
     /**
      * @brief Construct a new Turn Result object from a descriptive string
@@ -63,6 +66,7 @@ class TurnResult {
     bool riichi_player_4;     /**< Is Player 4 riichi */
     int fu_score_;            /**< Fu score obtained */
     int fan_score_;           /**< Bonus Fan score obtained */
+    const WinningHand *hand_; /**< Winning hand */
 
     /**
      * @brief Double-entry tabular corresponding to what each player must pay in

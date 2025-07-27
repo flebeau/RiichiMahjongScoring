@@ -36,6 +36,11 @@ Tile TileSelector::value() const {
                 value_->itemData(value_->currentIndex()).toInt());
 }
 
+void TileSelector::setValue(const Tile &tile) {
+    suit_->setCurrentIndex(suit_->findData(tile.suit()));
+    value_->setCurrentIndex(value_->findData(tile.value()));
+}
+
 void TileSelector::setChii(bool chii) {
     if (chii_ == chii) {
         return;
@@ -121,6 +126,18 @@ ClassicGroup ClassicGroupSelector::value() const {
     return ClassicGroup(ClassicGroupType::KAN, firstTile(), isMelded());
 }
 
+void ClassicGroupSelector::setValue(const ClassicGroup &group) {
+    if (group.type == ClassicGroupType::CHII) {
+        type_->setCurrentText("Chi");
+    } else if (group.type == ClassicGroupType::PON) {
+        type_->setCurrentText("Pon");
+    } else {
+        type_->setCurrentText("Kan");
+    }
+    first_tile_->setValue(group.tile);
+    melded_->setChecked(group.melded);
+}
+
 void ClassicGroupSelector::onTypeChanged() {
     emit typeChanged(isChi());
     emit Changed();
@@ -139,11 +156,15 @@ DuoGroupSelector::DuoGroupSelector(QWidget *parent)
             &DuoGroupSelector::onChange);
 }
 
+void DuoGroupSelector::setTile(const Tile &tile) {
+    tile_selector_->setValue(tile);
+}
+
 void DuoGroupSelector::onChange() { emit Changed(); }
 
 Tile DuoGroupSelector::tile() const { return tile_selector_->value(); }
 
-HandDialog::HandDialog(QWidget *parent)
+HandDialog::HandDialog(QWidget *parent, const WinningHand *hand)
     : QDialog(parent), tabs_(new QTabWidget), classic_tab_(new QWidget),
       seven_pairs_tab_(new QWidget), thirteen_orphans_tab_(new QWidget),
       first_group_(new ClassicGroupSelector),
@@ -259,7 +280,8 @@ HandDialog::HandDialog(QWidget *parent)
             &HandDialog::onChange);
     for (const auto &duo : seven_pairs_groups_)
         connect(duo, &DuoGroupSelector::Changed, this, &HandDialog::onChange);
-    // connect(doras_, &QSpinBox::valueChanged, this, &HandDialog::onChange);
+    // connect(doras_, &QSpinBox::valueChanged, this,
+    // &HandDialog::onChange);
     connect(tsumo_button_, &QRadioButton::toggled, this, &HandDialog::onChange);
     connect(riichi_button_, &QCheckBox::toggled, this, &HandDialog::onChange);
     connect(ippatsu_button_, &QCheckBox::toggled, this, &HandDialog::onChange);
@@ -271,8 +293,46 @@ HandDialog::HandDialog(QWidget *parent)
 
     connect(confirm_button_, &QPushButton::clicked, this, &HandDialog::accept);
     connect(cancel_button_, &QPushButton::clicked, this, &HandDialog::reject);
-    updateScoreText();
+
+    if (hand != nullptr) {
+        if (hand->type() == HandType::CLASSIC) {
+            tabs_->setCurrentIndex(0);
+            const ClassicHand &classic_hand = hand->hand().classic_hand;
+            first_group_->setValue(classic_hand.groups[0]);
+            second_group_->setValue(classic_hand.groups[1]);
+            third_group_->setValue(classic_hand.groups[2]);
+            fourth_group_->setValue(classic_hand.groups[3]);
+            duo_group_->setTile(classic_hand.duo_tile);
+        } else if (hand->type() == HandType::PAIRS) {
+            tabs_->setCurrentIndex(1);
+            const auto &groups = hand->hand().seven_pairs_hand;
+            for (int i = 0; i < 7; i++) {
+                seven_pairs_groups_[i]->setTile(groups[i]);
+            }
+        } else if (hand->type() == HandType::ORPHANS) {
+            // TODO
+        }
+        if (hand->isRon()) {
+            ron_button_->setChecked(true);
+        } else {
+            tsumo_button_->setChecked(true);
+        }
+        if (hand->isRiichi()) {
+            riichi_button_->setChecked(true);
+        }
+        if (hand->isIppatsu()) {
+            ippatsu_button_->setChecked(true);
+        }
+        doras_->setValue(hand->totalDoras());
+        player_wind_selector_->setCurrentIndex(
+            player_wind_selector_->findData(hand->playerWind().value()));
+        dominant_wind_selector_->setCurrentIndex(
+            dominant_wind_selector_->findData(hand->dominantWind().value()));
+    }
+    onChange();
 }
+
+const WinningHand &HandDialog::hand() const { return hand_represented_; }
 
 void HandDialog::updateScoreText() {
     HandScore score = hand_represented_.computeScore();

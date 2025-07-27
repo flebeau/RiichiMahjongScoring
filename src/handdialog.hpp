@@ -28,6 +28,7 @@ class TileSelector : public QWidget {
     TileSelector(QWidget *parent = nullptr, bool chii_selector = true);
 
     Tile value() const;
+    void setValue(const Tile &tile);
 
   public slots:
     void setChii(bool chii);
@@ -56,6 +57,7 @@ class ClassicGroupSelector : public QGroupBox {
     bool isMelded() const;
     Tile firstTile() const;
     ClassicGroup value() const;
+    void setValue(const ClassicGroup &group);
 
   signals:
     void typeChanged(bool chii);
@@ -77,6 +79,7 @@ class DuoGroupSelector : public QGroupBox {
     DuoGroupSelector(QWidget *parent = nullptr);
 
     Tile tile() const;
+    void setTile(const Tile &tile);
   private slots:
     void onChange();
   signals:
@@ -93,7 +96,8 @@ class DuoGroupSelector : public QGroupBox {
 class HandDialog : public QDialog {
     Q_OBJECT
   public:
-    HandDialog(QWidget *parent = nullptr);
+    HandDialog(QWidget *parent = nullptr, const WinningHand *hand = nullptr);
+    const WinningHand &hand() const;
 
   private slots:
     void onChange();

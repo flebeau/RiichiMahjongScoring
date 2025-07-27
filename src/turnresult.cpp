@@ -1,18 +1,21 @@
 #include "turnresult.hpp"
-#include <sstream>
+#include "winning_hand.hpp"
+#include <iostream>
 
 TurnResult::TurnResult(int _east_player, int _winner, int _ron_victory,
                        int _loser, bool _riichi_player_1, bool _riichi_player_2,
                        bool _riichi_player_3, bool _riichi_player_4,
-                       int _fu_score, int _fan_score)
+                       int _fu_score, int _fan_score, const WinningHand *hand)
     : east_player_(_east_player), winner_(_winner), ron_victory_(_ron_victory),
       loser_(_loser), riichi_player_1(_riichi_player_1),
       riichi_player_2(_riichi_player_2), riichi_player_3(_riichi_player_3),
       riichi_player_4(_riichi_player_4), fu_score_(_fu_score),
-      fan_score_(_fan_score) {}
+      fan_score_(_fan_score), hand_(hand) {}
 
 TurnResult::TurnResult(std::vector<int> scores)
     : ron_victory_(2), scores_(scores) {}
+
+TurnResult::~TurnResult() { delete hand_; }
 
 TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
     QTextStream in(description);
@@ -22,6 +25,11 @@ TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
     in >> east_player_ >> winner_ >> ron_victory_;
     if (ron_victory_ <= 1) {
         in >> loser_ >> r1 >> r2 >> r3 >> r4 >> fu_score_ >> fan_score_;
+        QString hand_string;
+        in >> hand_string;
+        if (hand_string.length() > 0) {
+            hand_ = new WinningHand(hand_string);
+        }
 
         riichi_player_1 = static_cast<bool>(r1);
         riichi_player_2 = static_cast<bool>(r2);
@@ -114,6 +122,9 @@ void TurnResult::writeToTextStream(QTextStream &out) const {
             << loser_ << " " << riichi_player_1 << " " << riichi_player_2 << " "
             << riichi_player_3 << " " << riichi_player_4 << " " << fu_score_
             << " " << fan_score_;
+        if (hand_ != nullptr) {
+            out << " " << hand_->toString();
+        }
     } else { // Manual score
         out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
             << scores_[0] << " " << scores_[1] << " " << scores_[2];

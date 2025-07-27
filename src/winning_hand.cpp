@@ -118,16 +118,33 @@ QString WinningHand::toString() const {
     QString result;
     switch (type_) {
     case HandType::CLASSIC:
-        return hand_.classic_hand.toString();
+        result += hand_.classic_hand.toString();
+        break;
     case HandType::PAIRS:
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 6; i++) {
             result += hand_.seven_pairs_hand[i].toString() + "-";
         }
-        return "7P" + result;
+        result += hand_.seven_pairs_hand[6].toString();
+        result = "7P" + result;
+        break;
     case HandType::ORPHANS:
-        return "13O" + hand_.duo_orphans_hand.toString();
+        result = "13O" + hand_.duo_orphans_hand.toString();
+        break;
+    default:
+        return "Unknown";
     }
-    return "Unknown";
+    result += "-" + QString::number(riichi_) + QString::number(ippatsu_) +
+              QString::number(ron_);
+    result += "-" + QString::number(total_doras_);
+    result += "-" + dominant_wind_.toString() + "-" + player_wind_.toString();
+    return result;
+}
+
+const Tile &WinningHand::dominantWind() const { return dominant_wind_; }
+const Tile &WinningHand::playerWind() const { return player_wind_; }
+
+WinningHand::WinningHand(const QString &description) {
+    //! TODO Parse description
 }
 
 /* Scoring methods */

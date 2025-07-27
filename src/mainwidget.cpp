@@ -73,7 +73,8 @@ void MainWidget::addResult() {
                 add_result_dialog.Player2DidRiichi(),
                 add_result_dialog.Player3DidRiichi(),
                 add_result_dialog.Player4DidRiichi(),
-                add_result_dialog.FuScore(), add_result_dialog.FanScore()));
+                add_result_dialog.FuScore(), add_result_dialog.FanScore(),
+                add_result_dialog.winningHand()));
         } else { // Manual score
             score_model_->addTurnResult(add_result_dialog.ManualScores());
         }
