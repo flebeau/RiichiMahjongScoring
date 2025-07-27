@@ -1,7 +1,10 @@
 #include "handdialog.hpp"
+#include "tile.hpp"
 #include "winning_hand.hpp"
 #include <QtWidgets>
 #include <functional>
+#include <qboxlayout.h>
+#include <qgridlayout.h>
 #include <qnamespace.h>
 #include <qtabwidget.h>
 
@@ -151,7 +154,12 @@ HandDialog::HandDialog(QWidget *parent)
       tsumo_button_(new QRadioButton(tr("Tsumo"))), doras_(new QSpinBox),
       riichi_button_(new QCheckBox(tr("Riichi"))),
       ippatsu_button_(new QCheckBox(tr("Ippatsu"))),
-      score_text_(new QLabel("")) {
+      dominant_wind_label_(new QLabel(tr("Dominant"))),
+      player_wind_label_(new QLabel(tr("Player"))),
+      dominant_wind_selector_(new QComboBox),
+      player_wind_selector_(new QComboBox), score_text_(new QLabel("")),
+      confirm_button_(new QPushButton(tr("&Confirm"))),
+      cancel_button_(new QPushButton(tr("C&ancel"))) {
     /* Create the classic tab */
     QVBoxLayout *classic_layout = new QVBoxLayout;
 
@@ -203,17 +211,42 @@ HandDialog::HandDialog(QWidget *parent)
     doras->setLayout(doras_layout);
     victory_infos_layout->addWidget(doras, 1, 0, 1, 1);
 
+    dominant_wind_selector_->addItem(" E ", static_cast<int>(HonorValue::EAST));
+    dominant_wind_selector_->addItem(" S ",
+                                     static_cast<int>(HonorValue::SOUTH));
+    dominant_wind_selector_->addItem(" W ", static_cast<int>(HonorValue::WEST));
+    dominant_wind_selector_->addItem(" N ",
+                                     static_cast<int>(HonorValue::NORTH));
+    player_wind_selector_->addItem(" E ", static_cast<int>(HonorValue::EAST));
+    player_wind_selector_->addItem(" S ", static_cast<int>(HonorValue::SOUTH));
+    player_wind_selector_->addItem(" W ", static_cast<int>(HonorValue::WEST));
+    player_wind_selector_->addItem(" N ", static_cast<int>(HonorValue::NORTH));
+    QGridLayout *winds = new QGridLayout;
+    winds->addWidget(dominant_wind_label_, 0, 0, 1, 1);
+    winds->addWidget(dominant_wind_selector_, 0, 1, 1, 1);
+    winds->addWidget(player_wind_label_, 1, 0, 1, 1);
+    winds->addWidget(player_wind_selector_, 1, 1, 1, 1);
+    victory_infos_layout->addLayout(winds, 1, 1, 1, 1);
+
     connect(riichi_button_, &QRadioButton::toggled, this,
             &HandDialog::onRiichiChange);
 
     score_text_->setWordWrap(true);
 
+    QHBoxLayout *buttons_layout = new QHBoxLayout;
+    buttons_layout->addWidget(confirm_button_);
+    buttons_layout->addWidget(cancel_button_);
+
     QGridLayout *layout = new QGridLayout;
-    layout->addWidget(tabs_, 0, 0, 2, 1);
+    layout->addWidget(tabs_, 0, 0, 3, 1);
     layout->addLayout(victory_infos_layout, 0, 1, 1, 1);
     layout->addWidget(score_text_, 1, 1, 1, 1, Qt::AlignTop);
+    layout->addLayout(buttons_layout, 2, 1, 1, 1, Qt::AlignBottom);
     layout->setRowStretch(0, 0);
     layout->setRowStretch(1, 1);
+    layout->setRowStretch(2, 0);
+    layout->setColumnStretch(0, 0);
+    layout->setColumnStretch(1, 1);
     setLayout(layout);
     setWindowTitle(tr("Winning Hand"));
 
@@ -230,27 +263,20 @@ HandDialog::HandDialog(QWidget *parent)
     connect(tsumo_button_, &QRadioButton::toggled, this, &HandDialog::onChange);
     connect(riichi_button_, &QCheckBox::toggled, this, &HandDialog::onChange);
     connect(ippatsu_button_, &QCheckBox::toggled, this, &HandDialog::onChange);
+    connect(dominant_wind_selector_, &QComboBox::currentTextChanged, this,
+            &HandDialog::onChange);
+    connect(player_wind_selector_, &QComboBox::currentTextChanged, this,
+            &HandDialog::onChange);
     // TODO Add update with dora change
+
+    connect(confirm_button_, &QPushButton::clicked, this, &HandDialog::accept);
+    connect(cancel_button_, &QPushButton::clicked, this, &HandDialog::reject);
     updateScoreText();
 }
 
 void HandDialog::updateScoreText() {
     HandScore score = hand_represented_.computeScore();
-    QString text = "<hr><p><b>Fu:</b> " + QString::number(score.totalFu()) +
-                   (score.fuDetails().size() > 0 ? " = 20" : "");
-    for (const auto &fu_detail : score.fuDetails()) {
-        text += " + " + QString::number(fu_detail.value);
-    }
-
-    text += "<br><b>Fan:</b> " + QString::number(score.totalFan()) +
-            "</p>\n<b>Yakus:</b>\n<ul>\n";
-    // Add yaku names
-    for (const auto &yaku : score.yakus()) {
-        text += "  <li>" + yaku.detail + " (+" + QString::number(yaku.value) +
-                ")" + "</li>\n";
-    }
-    text += "</ul>";
-    score_text_->setText(text);
+    score_text_->setText(score.toString());
 }
 
 void HandDialog::onChange() {
@@ -263,6 +289,12 @@ void HandDialog::onChange() {
         hand_represented_ = WinningHand(
             ClassicHand(first_group, second_group, third_group, fourth_group,
                         duo_tile),
+            Tile(HONOR, dominant_wind_selector_
+                            ->itemData(dominant_wind_selector_->currentIndex())
+                            .toInt()),
+            Tile(HONOR, player_wind_selector_
+                            ->itemData(player_wind_selector_->currentIndex())
+                            .toInt()),
             riichi_button_->isChecked(), ippatsu_button_->isChecked(),
             ron_button_->isChecked(), doras_->value());
 

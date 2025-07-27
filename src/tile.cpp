@@ -12,3 +12,7 @@ bool Tile::isTerminal() const {
     return !isHonor() && (value_ == 1 || value_ == 9);
 }
 bool Tile::isOrphan() const { return isHonor() || isTerminal(); }
+
+bool Tile::operator==(const Tile &other) const {
+    return suit_ == other.suit() && value_ == other.value();
+}

@@ -15,7 +15,9 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <qcombobox.h>
 #include <qlabel.h>
+#include <qpushbutton.h>
 
 #include "tile.hpp"
 #include "winning_hand.hpp"
@@ -120,6 +122,13 @@ class HandDialog : public QDialog {
     QSpinBox *doras_;
     QCheckBox *riichi_button_;
     QCheckBox *ippatsu_button_;
+    QLabel *dominant_wind_label_;
+    QLabel *player_wind_label_;
+    QComboBox *dominant_wind_selector_;
+    QComboBox *player_wind_selector_;
     /* Score display */
     QLabel *score_text_;
+    /* Buttons */
+    QPushButton *confirm_button_;
+    QPushButton *cancel_button_;
 };

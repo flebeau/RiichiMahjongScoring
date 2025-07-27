@@ -29,6 +29,8 @@ class Tile {
     bool isTerminal() const;
     bool isOrphan() const;
 
+    bool operator==(const Tile &other) const;
+
   private:
     char suit_;
     int value_;

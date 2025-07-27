@@ -62,18 +62,42 @@ void HandScore::addYakuman(const QString &detail, bool doubled) {
                                detail + "</b>"});
 }
 
-WinningHand::WinningHand(const ClassicHand &classic_hand, bool riichi,
-                         bool ippatsu, bool ron, int total_doras)
+QString HandScore::toString() const {
+    QString text = "<hr><p><b>Fu:</b> " + QString::number(totalFu()) +
+                   (fu_details_.size() > 0 ? " = 20" : "");
+    for (const auto &fu_detail : fu_details_) {
+        text += " + " + QString::number(fu_detail.value);
+    }
+
+    text += "<br><b>Fan:</b> " + QString::number(totalFan()) +
+            "</p>\n<b>Yakus:</b>\n<ul>\n";
+    // Add yaku names
+    for (const auto &yaku : yakus_) {
+        text += "  <li>" + yaku.detail + " (+" + QString::number(yaku.value) +
+                ")" + "</li>\n";
+    }
+    text += "</ul>";
+    return text;
+}
+
+WinningHand::WinningHand(const ClassicHand &classic_hand,
+                         const Tile &dominant_wind, const Tile &player_wind,
+                         bool riichi, bool ippatsu, bool ron, int total_doras)
     : type_(HandType::CLASSIC), hand_(classic_hand), riichi_(riichi),
-      ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras) {}
-WinningHand::WinningHand(Tile seven_pairs[7], bool riichi, bool ippatsu,
+      ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras),
+      dominant_wind_(dominant_wind), player_wind_(player_wind) {}
+WinningHand::WinningHand(Tile seven_pairs[7], const Tile &dominant_wind,
+                         const Tile &player_wind, bool riichi, bool ippatsu,
                          bool ron, int total_doras)
     : type_(HandType::PAIRS), hand_(seven_pairs), riichi_(riichi),
-      ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras) {}
-WinningHand::WinningHand(Tile duo_orphans_hand, bool riichi, bool ippatsu,
+      ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras),
+      dominant_wind_(dominant_wind), player_wind_(player_wind) {}
+WinningHand::WinningHand(Tile duo_orphans_hand, const Tile &dominant_wind,
+                         const Tile &player_wind, bool riichi, bool ippatsu,
                          bool ron, int total_doras)
     : type_(HandType::ORPHANS), hand_(duo_orphans_hand), riichi_(riichi),
-      ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras) {}
+      ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras),
+      dominant_wind_(dominant_wind), player_wind_(player_wind) {}
 
 HandType WinningHand::type() const { return type_; }
 HandTiles WinningHand::hand() const { return hand_; }
@@ -149,7 +173,13 @@ HandScore WinningHand::computeScore() const {
         if (hand_.classic_hand.duo_tile.isDragon()) {
             score.addFu(2, "Dragon Pair");
         }
-        // TODO Dominant and seat winds
+        if (hand_.classic_hand.duo_tile.isWind()) {
+            if (hand_.classic_hand.duo_tile == dominant_wind_) {
+                score.addFu(2, "Dominant wind pair");
+            } else if (hand_.classic_hand.duo_tile == player_wind_) {
+                score.addFu(2, "Player's wind pair");
+            }
+        }
         // Handle pons (including kans)
         for (int i = 0; i < 4; i++) {
             if (hand_.classic_hand.groups[i].type == ClassicGroupType::CHII) {
@@ -201,11 +231,13 @@ HandScore WinningHand::computeScore() const {
     if (isClosed() && isTsumo()) {
         score.addYaku(1, "Fully concealed hand");
     }
-    if (type_ == HandType::PAIRS) {
+    if (type_ == HandType::ORPHANS) {
+        score.addYakuman("Thirteen Orphans", true);
+    } else if (type_ == HandType::PAIRS) {
         score.addYaku(2, "Seven pairs");
     }
     // TODO Handle twice double chii
-    if (type_ == HandType::CLASSIC) {
+    else if (type_ == HandType::CLASSIC) {
         int n_simple = 0, n_chii = 0, n_concealed_pon = 0, n_pon = 0, n_kan = 0,
             n_dragon_pon = 0, n_wind_pon = 0, n_group_with_terminal = 0;
         for (const auto &group : hand_.classic_hand.groups) {
@@ -233,8 +265,13 @@ HandScore WinningHand::computeScore() const {
                     n_dragon_pon += 1;
                 }
                 if (group.tile.isWind()) {
-                    // TODO Handle dominant and seat winds pon
                     n_wind_pon += 1;
+                    if (group.tile == dominant_wind_) {
+                        score.addYaku(1, "Prevailing wind pon");
+                    }
+                    if (group.tile == player_wind_) {
+                        score.addYaku(1, "Player's wind pon");
+                    }
                 }
             }
         }

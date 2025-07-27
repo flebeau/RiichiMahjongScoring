@@ -76,6 +76,8 @@ class HandScore {
     void addBetterYaku(int fan, const QString &detail);
     void addYakuman(const QString &detail, bool doubled = false);
 
+    QString toString() const;
+
   private:
     int fu_;
     QVector<ValueDetail> fu_details_;
@@ -86,11 +88,14 @@ class HandScore {
 class WinningHand {
   public:
     WinningHand(){};
-    WinningHand(const ClassicHand &classic_hand, bool riichi = false,
+    WinningHand(const ClassicHand &classic_hand, const Tile &dominant_wind,
+                const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
-    WinningHand(Tile seven_pairs_hand[7], bool riichi = false,
+    WinningHand(Tile seven_pairs_hand[7], const Tile &dominant_wind,
+                const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
-    WinningHand(Tile duo_orphans_hand, bool riichi = false,
+    WinningHand(Tile duo_orphans_hand, const Tile &dominant_wind,
+                const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
 
     HandType type() const;
@@ -115,4 +120,6 @@ class WinningHand {
     bool ippatsu_;
     bool ron_;
     int total_doras_;
+    Tile dominant_wind_;
+    Tile player_wind_;
 };
