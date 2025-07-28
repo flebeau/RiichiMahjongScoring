@@ -49,12 +49,13 @@ class TileSelector : public QWidget {
 class ClassicGroupSelector : public QGroupBox {
     Q_OBJECT
   public:
-    ClassicGroupSelector(QWidget *parent = nullptr);
+    ClassicGroupSelector(QWidget *parent = nullptr, bool ron_possible = false);
 
     bool isChi() const;
     bool isPon() const;
     bool isKan() const;
     bool isMelded() const;
+    bool isRonMelded() const;
     Tile firstTile() const;
     ClassicGroup value() const;
     void setValue(const ClassicGroup &group);
@@ -62,15 +63,23 @@ class ClassicGroupSelector : public QGroupBox {
   signals:
     void typeChanged(bool chii);
     void Changed();
+    void ronChanged(bool ron);
+
+  public slots:
+    void preventRon(bool prevent);
 
   private slots:
     void onTypeChanged();
+    void onMeldedChange();
     void onChange();
+    void onRonChange();
 
   private:
     QComboBox *type_;
     TileSelector *first_tile_;
     QCheckBox *melded_;
+    QCheckBox *ron_;
+    bool ron_prevented_;
 };
 
 class DuoGroupSelector : public QGroupBox {
@@ -96,7 +105,8 @@ class DuoGroupSelector : public QGroupBox {
 class HandDialog : public QDialog {
     Q_OBJECT
   public:
-    HandDialog(QWidget *parent = nullptr, const WinningHand *hand = nullptr);
+    HandDialog(QWidget *parent = nullptr, const WinningHand *hand = nullptr,
+               bool ron = false, bool east_player = false);
     const WinningHand &hand() const;
 
   private slots:
@@ -106,6 +116,7 @@ class HandDialog : public QDialog {
   private:
     void updateScoreText();
 
+    bool ron_;
     WinningHand hand_represented_;
     /*** Widgets used ***/
     QTabWidget *tabs_;
@@ -121,8 +132,6 @@ class HandDialog : public QDialog {
     /* For seven pairs */
     DuoGroupSelector *seven_pairs_groups_[7];
     /* Other information for computing fu and fans */
-    QRadioButton *ron_button_;
-    QRadioButton *tsumo_button_;
     QSpinBox *doras_;
     QCheckBox *riichi_button_;
     QCheckBox *ippatsu_button_;

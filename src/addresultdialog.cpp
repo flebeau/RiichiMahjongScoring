@@ -267,7 +267,9 @@ void AddResultDialog::showHelp() {
 }
 
 void AddResultDialog::showHandDialog() {
-    HandDialog hand_dialog(this, hand_);
+    HandDialog hand_dialog(this, hand_, ron_button_->isChecked(),
+                           east_selector_->currentText() ==
+                               winner_selector_->currentText());
     if (hand_dialog.exec() == QDialog::Accepted) {
         if (hand_ != nullptr) {
             delete hand_;

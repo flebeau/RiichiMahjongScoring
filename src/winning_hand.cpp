@@ -14,7 +14,7 @@ QString groupTypeToString(const ClassicGroupType &type) {
 
 QString ClassicGroup::toString() const {
     return groupTypeToString(type) + tile.toString() +
-           (melded ? MELDED_CHAR : "");
+           QString(melded ? MELDED_CHAR : "") + (ron_meld ? MELDED_CHAR : "");
 }
 bool ClassicGroup::isSimple() const {
     return (!tile.isHonor()) && (tile.value() > 1) &&

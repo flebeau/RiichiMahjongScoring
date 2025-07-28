@@ -12,9 +12,12 @@ typedef struct ClassicGroup {
     ClassicGroupType type;
     Tile tile;
     bool melded = false;
+    bool ron_meld = false;
     ClassicGroup(const ClassicGroupType &type_in = ClassicGroupType::CHII,
-                 const Tile &tile_in = Tile(), bool melded_in = false)
-        : type(type_in), tile(tile_in), melded(melded_in) {}
+                 const Tile &tile_in = Tile(), bool melded_in = false,
+                 bool ron_meld_in = false)
+        : type(type_in), tile(tile_in), melded(melded_in),
+          ron_meld(ron_meld_in) {}
     QString toString() const;
     bool isSimple() const;
 } ClassicGroup;
