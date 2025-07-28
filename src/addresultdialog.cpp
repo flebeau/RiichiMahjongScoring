@@ -1,3 +1,5 @@
+#include <QCheckBox>
+#include <QDebug>
 #include <QGridLayout>
 #include <QHBoxLayout>
 
@@ -229,6 +231,27 @@ bool AddResultDialog::Player4DidRiichi() const {
     return riichi_player_4_->isChecked();
 }
 
+QCheckBox *AddResultDialog::winnerRiichiButton() {
+    if (winner_selector_->currentText() == player_names_[0]) {
+        return riichi_player_1_;
+    } else if (winner_selector_->currentText() == player_names_[1]) {
+        return riichi_player_2_;
+    } else if (winner_selector_->currentText() == player_names_[2]) {
+        return riichi_player_3_;
+    } else if (winner_selector_->currentText() == player_names_[3]) {
+        return riichi_player_4_;
+    }
+    return nullptr;
+}
+
+bool AddResultDialog::WinnerDidRiichi() {
+    const QCheckBox *button = winnerRiichiButton();
+    if (button != nullptr) {
+        return button->isChecked();
+    }
+    return false;
+}
+
 unsigned AddResultDialog::FuScore() const { return fu_selector_->value(); }
 unsigned AddResultDialog::FanScore() const { return fan_selector_->value(); }
 
@@ -269,7 +292,8 @@ void AddResultDialog::showHelp() {
 void AddResultDialog::showHandDialog() {
     HandDialog hand_dialog(this, hand_, ron_button_->isChecked(),
                            east_selector_->currentText() ==
-                               winner_selector_->currentText());
+                               winner_selector_->currentText(),
+                           WinnerDidRiichi());
     if (hand_dialog.exec() == QDialog::Accepted) {
         if (hand_ != nullptr) {
             delete hand_;
@@ -280,6 +304,11 @@ void AddResultDialog::showHandDialog() {
         HandScore score = hand_->computeScore();
         fu_selector_->setValue(score.totalFu());
         fan_selector_->setValue(score.totalFan());
+        QCheckBox *riichi_button = winnerRiichiButton();
+        if (hand_->isRiichi() && !riichi_button->isChecked()) {
+            riichi_button->setChecked(true);
+        }
+        qDebug() << hand_->toString() << "\n";
     }
 }
 

@@ -214,7 +214,7 @@ void DuoGroupSelector::onChange() { emit Changed(); }
 Tile DuoGroupSelector::tile() const { return tile_selector_->value(); }
 
 HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
-                       bool east_player)
+                       bool east_player, bool riichi)
     : QDialog(parent), ron_(ron), tabs_(new QTabWidget),
       classic_tab_(new QWidget), seven_pairs_tab_(new QWidget),
       thirteen_orphans_tab_(new QWidget),
@@ -264,9 +264,10 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
     QGroupBox *win_by = new QGroupBox(tr("Win by"));
     QHBoxLayout *win_by_layout = new QHBoxLayout;
     riichi_button_->setChecked(false);
-    win_by_layout->addWidget(riichi_button_);
+    win_by_layout->addWidget(riichi_button_, 0);
     ippatsu_button_->setEnabled(false);
-    win_by_layout->addWidget(ippatsu_button_);
+    win_by_layout->addWidget(ippatsu_button_, 1);
+    win_by_layout->setSpacing(30);
     win_by->setLayout(win_by_layout);
 
     victory_infos_layout->addWidget(win_by, 0, 0, 1, 2);
@@ -285,7 +286,10 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
     dominant_wind_selector_->addItem(" W ", static_cast<int>(HonorValue::WEST));
     dominant_wind_selector_->addItem(" N ",
                                      static_cast<int>(HonorValue::NORTH));
-    player_wind_selector_->addItem(" E ", static_cast<int>(HonorValue::EAST));
+    if (east_player) {
+        player_wind_selector_->addItem(" E ",
+                                       static_cast<int>(HonorValue::EAST));
+    }
     player_wind_selector_->addItem(" S ", static_cast<int>(HonorValue::SOUTH));
     player_wind_selector_->addItem(" W ", static_cast<int>(HonorValue::WEST));
     player_wind_selector_->addItem(" N ", static_cast<int>(HonorValue::NORTH));
@@ -293,12 +297,15 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
         player_wind_selector_->setCurrentIndex(0);
         player_wind_selector_->setEnabled(false);
     }
+    QGroupBox *winds_group = new QGroupBox(tr("Winds"));
     QGridLayout *winds = new QGridLayout;
-    winds->addWidget(dominant_wind_label_, 0, 0, 1, 1);
+    winds->addWidget(dominant_wind_label_, 0, 0, 1, 1, Qt::AlignRight);
     winds->addWidget(dominant_wind_selector_, 0, 1, 1, 1);
-    winds->addWidget(player_wind_label_, 1, 0, 1, 1);
+    winds->addWidget(player_wind_label_, 1, 0, 1, 1, Qt::AlignRight);
     winds->addWidget(player_wind_selector_, 1, 1, 1, 1);
-    victory_infos_layout->addLayout(winds, 1, 1, 1, 1);
+    winds->setHorizontalSpacing(20);
+    winds_group->setLayout(winds);
+    victory_infos_layout->addWidget(winds_group, 1, 1, 1, 1);
 
     connect(riichi_button_, &QRadioButton::toggled, this,
             &HandDialog::onRiichiChange);
@@ -369,6 +376,11 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
 
     connect(confirm_button_, &QPushButton::clicked, this, &HandDialog::accept);
     connect(cancel_button_, &QPushButton::clicked, this, &HandDialog::reject);
+
+    if (riichi) {
+        riichi_button_->setChecked(true);
+        riichi_button_->setEnabled(false);
+    }
 
     if (hand != nullptr) {
         if (hand->type() == HandType::CLASSIC) {

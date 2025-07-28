@@ -119,6 +119,10 @@ class WinningHand {
     ValidityStatus checkValid() const;
     HandScore computeScore() const;
 
+    /* String utils */
+    static QString windTileToString(const Tile &tile);
+    static Tile stringToWindTile(const QString &str);
+
   private:
     HandType type_;
     HandTiles hand_;

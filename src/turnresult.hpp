@@ -18,8 +18,6 @@ class TurnResult {
     /** Manual score constructors */
     TurnResult(std::vector<int> scores);
 
-    ~TurnResult();
-
     /**
      * @brief Construct a new Turn Result object from a descriptive string
      */

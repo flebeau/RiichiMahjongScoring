@@ -9,6 +9,7 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <qcheckbox.h>
 #include <qpushbutton.h>
 #include <vector>
 
@@ -85,6 +86,7 @@ class AddResultDialog : public QDialog {
      * @return false otherwise
      */
     bool Player4DidRiichi() const;
+
     /**
      * @brief Returns the entered Fu score
      */
@@ -139,6 +141,8 @@ class AddResultDialog : public QDialog {
      * @return QGroupBox*
      */
     QGroupBox *createFuFanSelector();
+    QCheckBox *winnerRiichiButton();
+    bool WinnerDidRiichi();
 
     ScoreModel::N_Players n_players_;          /**< Number of players */
     const std::vector<QString> &player_names_; /**< Names of the players */

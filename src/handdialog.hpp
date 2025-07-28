@@ -106,7 +106,7 @@ class HandDialog : public QDialog {
     Q_OBJECT
   public:
     HandDialog(QWidget *parent = nullptr, const WinningHand *hand = nullptr,
-               bool ron = false, bool east_player = false);
+               bool ron = false, bool east_player = false, bool riichi = false);
     const WinningHand &hand() const;
 
   private slots:

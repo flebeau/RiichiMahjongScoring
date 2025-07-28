@@ -15,8 +15,6 @@ TurnResult::TurnResult(int _east_player, int _winner, int _ron_victory,
 TurnResult::TurnResult(std::vector<int> scores)
     : ron_victory_(2), scores_(scores) {}
 
-TurnResult::~TurnResult() { delete hand_; }
-
 TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
     QTextStream in(description);
 

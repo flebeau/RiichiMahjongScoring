@@ -1,4 +1,5 @@
 #include "winning_hand.hpp"
+#include "tile.hpp"
 
 const QString MELDED_CHAR = "#";
 
@@ -114,6 +115,36 @@ bool WinningHand::isClosed() const {
 }
 int WinningHand::totalDoras() const { return total_doras_; }
 
+QString WinningHand::windTileToString(const Tile &tile) {
+    if (!tile.isWind()) {
+        return "";
+    }
+    switch (tile.value()) {
+    case static_cast<int>(HonorValue::EAST):
+        return "E";
+    case static_cast<int>(HonorValue::SOUTH):
+        return "S";
+    case static_cast<int>(HonorValue::WEST):
+        return "W";
+    case static_cast<int>(HonorValue::NORTH):
+        return "N";
+    }
+    return "";
+}
+
+Tile WinningHand::stringToWindTile(const QString &str) {
+    if (str == "E") {
+        return Tile(HONOR, static_cast<int>(HonorValue::EAST));
+    } else if (str == "S") {
+        return Tile(HONOR, static_cast<int>(HonorValue::SOUTH));
+    } else if (str == "W") {
+        return Tile(HONOR, static_cast<int>(HonorValue::WEST));
+    } else if (str == "N") {
+        return Tile(HONOR, static_cast<int>(HonorValue::NORTH));
+    }
+    return Tile();
+}
+
 QString WinningHand::toString() const {
     QString result;
     switch (type_) {
@@ -121,22 +152,23 @@ QString WinningHand::toString() const {
         result += hand_.classic_hand.toString();
         break;
     case HandType::PAIRS:
+        result += "7P-";
         for (int i = 0; i < 6; i++) {
             result += hand_.seven_pairs_hand[i].toString() + "-";
         }
         result += hand_.seven_pairs_hand[6].toString();
-        result = "7P" + result;
+
         break;
     case HandType::ORPHANS:
-        result = "13O" + hand_.duo_orphans_hand.toString();
+        result = "13O-" + hand_.duo_orphans_hand.toString();
         break;
     default:
         return "Unknown";
     }
-    result += "-" + QString::number(riichi_) + QString::number(ippatsu_) +
-              QString::number(ron_);
-    result += "-" + QString::number(total_doras_);
-    result += "-" + dominant_wind_.toString() + "-" + player_wind_.toString();
+    result += "-" + QString::number(ippatsu_) + "-" +
+              QString::number(total_doras_) + "-" +
+              windTileToString(dominant_wind_) + "-" +
+              windTileToString(player_wind_);
     return result;
 }
 
