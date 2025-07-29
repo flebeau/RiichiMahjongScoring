@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
+#include <QDebug>
 #include <QDialog>
 #include <QFile>
 #include <iostream>
@@ -19,8 +20,7 @@ int main(int argc, char *argv[]) {
     parser.addVersionOption();
 
     // Option for analysing a game
-    QCommandLineOption analyze_option(QStringList() << "a"
-                                                    << "analyze",
+    QCommandLineOption analyze_option(QStringList() << "a" << "analyze",
                                       QDialog::tr("Analyze a scoresheet file."),
                                       "file");
     parser.addOption(analyze_option);

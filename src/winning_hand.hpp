@@ -115,6 +115,7 @@ class WinningHand {
     bool isOpen() const;
     int totalDoras() const;
     QString toString() const;
+    QString toUTF8Symbols() const;
     const Tile &dominantWind() const;
     const Tile &playerWind() const;
 

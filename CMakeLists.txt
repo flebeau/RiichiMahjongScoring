@@ -20,3 +20,9 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 file(GLOB SRCS src/*.cpp)
 add_executable(RiichiMahjongScoring ${SRCS})
 target_link_libraries(RiichiMahjongScoring Qt5::Widgets)
+
+# add_custom_command(
+#        TARGET RiichiMahjongScoring POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#                ${CMAKE_SOURCE_DIR}/mahjong_font.otf
+#                ${CMAKE_CURRENT_BINARY_DIR}/mahjong_font.otf)

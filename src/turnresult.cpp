@@ -23,16 +23,22 @@ TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
     in >> east_player_ >> winner_ >> ron_victory_;
     if (ron_victory_ <= 1) {
         in >> loser_ >> r1 >> r2 >> r3 >> r4 >> fu_score_ >> fan_score_;
+
+        riichi_player_1 = r1 != 0;
+        riichi_player_2 = r2 != 0;
+        riichi_player_3 = r3 != 0;
+        riichi_player_4 = r4 != 0;
+
         QString hand_string;
         in >> hand_string;
         if (hand_string.length() > 0) {
-            hand_ = new WinningHand(hand_string);
+            hand_ = new WinningHand(hand_string,
+                                    (winner_ == 0 && riichi_player_1) ||
+                                        (winner_ == 1 && riichi_player_2) ||
+                                        (winner_ == 2 && riichi_player_3) ||
+                                        (winner_ == 3 && riichi_player_4),
+                                    ron_victory_ == 1);
         }
-
-        riichi_player_1 = static_cast<bool>(r1);
-        riichi_player_2 = static_cast<bool>(r2);
-        riichi_player_3 = static_cast<bool>(r3);
-        riichi_player_4 = static_cast<bool>(r4);
     } else { // Manual result
         if (n_players == 3) {
             scores_ = std::vector<int>(3, 0);
@@ -142,6 +148,7 @@ bool TurnResult::riichiPlayer3() const { return riichi_player_3; }
 bool TurnResult::riichiPlayer4() const { return riichi_player_4; }
 int TurnResult::fuScore() const { return fu_score_; }
 int TurnResult::fanScore() const { return fan_score_; }
+const WinningHand *TurnResult::hand() const { return hand_; }
 
 int TurnResult::Tabular1(int fu, int fan) {
     if (fan == 1) {

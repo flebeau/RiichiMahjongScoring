@@ -46,6 +46,7 @@ class TurnResult {
     bool riichiPlayer4() const;
     int fuScore() const;
     int fanScore() const;
+    const WinningHand *hand() const;
 
   private:
     int east_player_; /**< Number of East player */

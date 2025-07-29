@@ -22,6 +22,7 @@ class Tile {
     Tile(char suit = BAMBOO, int value = 1);
     Tile(const QString &descr);
     QString toString() const;
+    QString toUTF8() const;
     char suit() const;
     int value() const;
     bool isHonor() const;

@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QTextStream>
+#include <qdebug.h>
 
 #include "tile.hpp"
 #include "winning_hand.hpp"
@@ -193,7 +194,6 @@ QString WinningHand::toString() const {
             result += hand_.seven_pairs_hand[i].toString() + "-";
         }
         result += hand_.seven_pairs_hand[6].toString();
-
         break;
     case HandType::ORPHANS:
         result = "13O-" + hand_.duo_orphans_hand.toString();
@@ -201,10 +201,45 @@ QString WinningHand::toString() const {
     default:
         return "Unknown";
     }
-    result += "+" + QString::number(ippatsu_) + "-" +
+    result += "+" + QString(ippatsu_ ? "1" : "0") + "-" +
               QString::number(total_doras_) + "-" +
               windTileToString(dominant_wind_) + "-" +
               windTileToString(player_wind_);
+    return result;
+}
+
+static QChar HIDDEN_TILE = QChar(0x1F02B);
+
+QString WinningHand::toUTF8Symbols() const {
+    QString result;
+    if (type_ == HandType::CLASSIC) {
+        for (const auto &group : hand_.classic_hand.groups) {
+            if (group.type == ClassicGroupType::PON) {
+                result += group.tile.toUTF8().repeated(3);
+            } else if (group.type == ClassicGroupType::KAN) {
+                if (group.melded) {
+                    result += QString(group.tile.toUTF8()).repeated(4) + " ";
+                } else {
+                    result += HIDDEN_TILE +
+                              QString(group.tile.toUTF8()).repeated(2) +
+                              HIDDEN_TILE + " ";
+                }
+            } else if (group.type == ClassicGroupType::CHII) {
+                result +=
+                    QString(group.tile.toUTF8()) +
+                    Tile(group.tile.suit(), group.tile.value() + 1).toUTF8() +
+                    Tile(group.tile.suit(), group.tile.value() + 2).toUTF8() +
+                    " ";
+            }
+        }
+        result += QString(hand_.classic_hand.duo_tile.toUTF8()).repeated(2);
+    } else if (type_ == HandType::PAIRS) {
+        for (const auto &pair : hand_.seven_pairs_hand) {
+            result += QString(pair.toUTF8()).repeated(2) + " ";
+        }
+    } else if (type_ == HandType::ORPHANS) { // TODO
+    }
+
     return result;
 }
 
@@ -213,7 +248,6 @@ const Tile &WinningHand::playerWind() const { return player_wind_; }
 
 WinningHand::WinningHand(const QString &description, bool riichi, bool ron)
     : riichi_(riichi), ron_(ron) {
-    //! TODO Parse description
     QString descr = description;
     descr.replace('+', ' ');
     QTextStream in(&descr);
@@ -227,8 +261,9 @@ WinningHand::WinningHand(const QString &description, bool riichi, bool ron)
         in >> hand_descr;
         hand_descr.replace('-', ' ');
         QTextStream in_hand(&hand_descr);
+        QString pair;
+        in_hand >> pair; // Remove 7P prefix
         for (int i = 0; i < 7; i++) {
-            QString pair;
             in_hand >> pair;
             hand_.seven_pairs_hand[i] = Tile(pair);
         }
@@ -242,10 +277,11 @@ WinningHand::WinningHand(const QString &description, bool riichi, bool ron)
     in2 >> ippatsu >> total_doras_ >> dominant >> player;
     if (ippatsu != 0) {
         ippatsu_ = true;
+    } else {
+        ippatsu_ = false;
     }
     dominant_wind_ = stringToWindTile(dominant);
     player_wind_ = stringToWindTile(player);
-    QDebug(toString()); //! Remove after testing
 }
 
 /* Scoring methods */

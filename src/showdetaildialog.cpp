@@ -1,5 +1,7 @@
+#include <QDebug>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <qfontdatabase.h>
 
 #include "showdetaildialog.hpp"
 
@@ -101,7 +103,13 @@ ShowDetailDialog::ShowDetailDialog(QWidget *parent,
                              : tr("<td>lost</td> <td align=\"right\">%1")
                                    .arg(-score_change[3]));
         }
-        label_content += "</table>";
+        label_content += "</table>\n";
+        if (turn_result.hand() != nullptr) {
+            label_content +=
+                "<p style=\"font-size: 3rem; text-align: center;\">" +
+                turn_result.hand()->toUTF8Symbols() + "</p>\n";
+            label_content += turn_result.hand()->computeScore().toString();
+        }
     }
 
     /* Set label text */
