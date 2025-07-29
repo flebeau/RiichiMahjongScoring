@@ -1,6 +1,10 @@
 #include "tile.hpp"
 
 Tile::Tile(char suit, int value) : suit_(suit), value_(value) {}
+Tile::Tile(const QString &descr) {
+    suit_ = descr[1].unicode();
+    value_ = descr[0].digitValue();
+}
 QString Tile::toString() const { return QString::number(value_) + suit_; }
 
 char Tile::suit() const { return suit_; }

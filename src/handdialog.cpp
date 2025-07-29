@@ -446,9 +446,16 @@ void HandDialog::onChange() {
         for (int i = 0; i < 7; i++) {
             duo_tiles[i] = seven_pairs_groups_[i]->tile();
         }
-        hand_represented_ =
-            WinningHand(duo_tiles, riichi_button_->isChecked(),
-                        ippatsu_button_->isChecked(), ron_, doras_->value());
+        hand_represented_ = WinningHand(
+            duo_tiles,
+            Tile(HONOR, dominant_wind_selector_
+                            ->itemData(dominant_wind_selector_->currentIndex())
+                            .toInt()),
+            Tile(HONOR, player_wind_selector_
+                            ->itemData(player_wind_selector_->currentIndex())
+                            .toInt()),
+            riichi_button_->isChecked(), ippatsu_button_->isChecked(), ron_,
+            doras_->value());
     }
     updateScoreText();
 }

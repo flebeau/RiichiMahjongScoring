@@ -18,6 +18,7 @@ typedef struct ClassicGroup {
                  bool ron_meld_in = false)
         : type(type_in), tile(tile_in), melded(melded_in),
           ron_meld(ron_meld_in) {}
+    ClassicGroup(const QString &descr);
     QString toString() const;
     bool isSimple() const;
 } ClassicGroup;
@@ -32,6 +33,7 @@ typedef struct ClassicHand {
                 const ClassicGroup &fourth_group, const Tile &duo_tile)
         : groups{first_group, second_group, third_group, fourth_group},
           duo_tile(duo_tile) {}
+    ClassicHand(const QString &descr);
 } ClassicHand;
 
 union HandTiles {
@@ -100,7 +102,8 @@ class WinningHand {
     WinningHand(Tile duo_orphans_hand, const Tile &dominant_wind,
                 const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
-    WinningHand(const QString &description);
+    WinningHand(const QString &description, bool riichi = false,
+                bool ron = false);
 
     HandType type() const;
     HandTiles hand() const;

@@ -20,6 +20,7 @@ enum class HonorValue {
 class Tile {
   public:
     Tile(char suit = BAMBOO, int value = 1);
+    Tile(const QString &descr);
     QString toString() const;
     char suit() const;
     int value() const;

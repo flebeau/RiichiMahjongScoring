@@ -1,7 +1,11 @@
-#include "winning_hand.hpp"
-#include "tile.hpp"
+#include <QDebug>
+#include <QTextStream>
 
-const QString MELDED_CHAR = "#";
+#include "tile.hpp"
+#include "winning_hand.hpp"
+
+const QString RON_MELDED_CHAR = "\"";
+const QString MELDED_CHAR = "'";
 
 QString groupTypeToString(const ClassicGroupType &type) {
     if (type == ClassicGroupType::CHII) {
@@ -13,9 +17,28 @@ QString groupTypeToString(const ClassicGroupType &type) {
     }
 }
 
+ClassicGroup::ClassicGroup(const QString &descr) {
+    if (descr[0] == 'C') {
+        type = ClassicGroupType::CHII;
+    } else if (descr[0] == 'P') {
+        type = ClassicGroupType::PON;
+    } else {
+        type = ClassicGroupType::KAN;
+    }
+    tile = Tile(descr.mid(1, 2));
+    if (descr.length() > 3) {
+        if (descr[2] == RON_MELDED_CHAR[0]) {
+            ron_meld = true;
+            melded = true;
+        } else if (descr[2] == MELDED_CHAR[0]) {
+            melded = true;
+        }
+    }
+}
+
 QString ClassicGroup::toString() const {
     return groupTypeToString(type) + tile.toString() +
-           QString(melded ? MELDED_CHAR : "") + (ron_meld ? MELDED_CHAR : "");
+           (ron_meld ? RON_MELDED_CHAR : (melded ? MELDED_CHAR : ""));
 }
 bool ClassicGroup::isSimple() const {
     return (!tile.isHonor()) && (tile.value() > 1) &&
@@ -31,6 +54,19 @@ QString ClassicHand::toString() const {
     }
     result += duoToString(duo_tile);
     return result;
+}
+
+ClassicHand::ClassicHand(const QString &descr) {
+    QStringList groups_descr = descr.split('-');
+    int i = 0;
+    for (const auto &group : groups_descr) {
+        if (group[0] == 'D') {
+            duo_tile = Tile(group.mid(1));
+            continue;
+        }
+        groups[i] = ClassicGroup(group);
+        i++;
+    }
 }
 
 HandScore::HandScore() : fu_(20), fan_(0) {}
@@ -165,7 +201,7 @@ QString WinningHand::toString() const {
     default:
         return "Unknown";
     }
-    result += "-" + QString::number(ippatsu_) + "-" +
+    result += "+" + QString::number(ippatsu_) + "-" +
               QString::number(total_doras_) + "-" +
               windTileToString(dominant_wind_) + "-" +
               windTileToString(player_wind_);
@@ -175,8 +211,41 @@ QString WinningHand::toString() const {
 const Tile &WinningHand::dominantWind() const { return dominant_wind_; }
 const Tile &WinningHand::playerWind() const { return player_wind_; }
 
-WinningHand::WinningHand(const QString &description) {
+WinningHand::WinningHand(const QString &description, bool riichi, bool ron)
+    : riichi_(riichi), ron_(ron) {
     //! TODO Parse description
+    QString descr = description;
+    descr.replace('+', ' ');
+    QTextStream in(&descr);
+    QString hand_descr;
+    if (descr[0].isLetter()) { // Classic hand
+        type_ = HandType::CLASSIC;
+        in >> hand_descr;
+        hand_.classic_hand = ClassicHand(hand_descr);
+    } else if (descr[0] == '7') { // Seven pairs
+        type_ = HandType::PAIRS;
+        in >> hand_descr;
+        hand_descr.replace('-', ' ');
+        QTextStream in_hand(&hand_descr);
+        for (int i = 0; i < 7; i++) {
+            QString pair;
+            in_hand >> pair;
+            hand_.seven_pairs_hand[i] = Tile(pair);
+        }
+    }
+    QString infos;
+    in >> infos;
+    infos.replace('-', ' ');
+    QTextStream in2(&infos);
+    int ippatsu;
+    QString dominant, player;
+    in2 >> ippatsu >> total_doras_ >> dominant >> player;
+    if (ippatsu != 0) {
+        ippatsu_ = true;
+    }
+    dominant_wind_ = stringToWindTile(dominant);
+    player_wind_ = stringToWindTile(player);
+    QDebug(toString()); //! Remove after testing
 }
 
 /* Scoring methods */
