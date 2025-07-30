@@ -2,10 +2,10 @@
 
 #include <QString>
 
-const char BAMBOO = 's';
-const char CHARACTER = 'm';
-const char DOT = 'p';
-const char HONOR = 'z';
+static const char BAMBOO = 's';
+static const char CHARACTER = 'm';
+static const char DOT = 'p';
+static const char HONOR = 'z';
 
 enum class HonorValue {
     EAST = 1,

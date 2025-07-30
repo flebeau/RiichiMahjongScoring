@@ -172,9 +172,6 @@ void MainWindow::createActions() {
         tr("Show the RiichiMahjongSolving application About box"));
     connect(aboutAct, &QAction::triggered, this, &MainWindow::about);
     helpMenu->addAction(aboutAct);
-    QAction *testAct = new QAction("Testing hand selector", this);
-    connect(testAct, &QAction::triggered, this, &MainWindow::testHandSelector);
-    helpMenu->addAction(testAct);
 
     /* How to score action */
     const QIcon howToIcon = QIcon::fromTheme("help-faq");

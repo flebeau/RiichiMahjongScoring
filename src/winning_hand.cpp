@@ -220,7 +220,7 @@ QString WinningHand::toUTF8Symbols() const {
     if (type_ == HandType::CLASSIC) {
         for (const auto &group : hand_.classic_hand.groups) {
             if (group.type == ClassicGroupType::PON) {
-                result += group.tile.toUTF8().repeated(3);
+                result += group.tile.toUTF8().repeated(3) + " ";
             } else if (group.type == ClassicGroupType::KAN) {
                 if (group.melded) {
                     result += QString(group.tile.toUTF8()).repeated(4) + " ";
@@ -390,41 +390,70 @@ HandScore WinningHand::computeScore() const {
     if (isClosed() && isTsumo()) {
         score.addYaku(1, "Fully concealed hand");
     }
+
+    int n_simple = 0, n_dragon_group = 0, n_wind_group = 0,
+        n_group_with_terminal = 0, n_chii = 0, n_bamboo_group = 0,
+        n_dot_group = 0, n_character_group = 0;
+
     if (type_ == HandType::ORPHANS) {
         score.addYakuman("Thirteen Orphans", true);
     } else if (type_ == HandType::PAIRS) {
         score.addYaku(2, "Seven pairs");
+        for (const auto &tile : hand_.seven_pairs_hand) {
+            if (tile.suit() == BAMBOO) {
+                n_bamboo_group++;
+            } else if (tile.suit() == DOT) {
+                n_dot_group++;
+            } else if (tile.suit() == CHARACTER) {
+                n_character_group++;
+            }
+            if (!tile.isOrphan()) {
+                n_simple++;
+            } else if (tile.isDragon()) {
+                n_dragon_group++;
+            } else if (tile.isWind()) {
+                n_wind_group++;
+            } else {
+                n_group_with_terminal++;
+            }
+        }
     }
-    // TODO Handle twice double chii
+
     else if (type_ == HandType::CLASSIC) {
-        int n_simple = 0, n_chii = 0, n_concealed_pon = 0, n_pon = 0, n_kan = 0,
-            n_dragon_pon = 0, n_wind_pon = 0, n_group_with_terminal = 0;
+        int n_concealed_pon = 0, n_pon = 0, n_kan = 0;
         for (const auto &group : hand_.classic_hand.groups) {
+            if (group.tile.suit() == BAMBOO) {
+                n_bamboo_group++;
+            } else if (group.tile.suit() == DOT) {
+                n_dot_group++;
+            } else if (group.tile.suit() == CHARACTER) {
+                n_character_group++;
+            }
             if (group.isSimple()) {
-                n_simple += 1;
+                n_simple++;
             }
             if (group.type == ClassicGroupType::CHII) {
-                n_chii += 1;
+                n_chii++;
                 if (!group.isSimple()) {
-                    n_group_with_terminal += 1;
+                    n_group_with_terminal++;
                 }
             } else { // Pon or Kan
-                n_pon += 1;
+                n_pon++;
                 if (group.type == ClassicGroupType::KAN) {
-                    n_kan += 1;
+                    n_kan++;
                 }
                 if (!group.melded) {
-                    n_concealed_pon += 1;
+                    n_concealed_pon++;
                 }
                 if (group.tile.isTerminal()) {
-                    n_group_with_terminal += 1;
+                    n_group_with_terminal++;
                 }
                 if (group.tile.isDragon()) {
                     score.addYaku(1, "Dragon pon");
-                    n_dragon_pon += 1;
+                    n_dragon_group++;
                 }
                 if (group.tile.isWind()) {
-                    n_wind_pon += 1;
+                    n_wind_group++;
                     if (group.tile == dominant_wind_) {
                         score.addYaku(1, "Prevailing wind pon");
                     }
@@ -434,11 +463,23 @@ HandScore WinningHand::computeScore() const {
                 }
             }
         }
-        int n_group_with_orphan =
-            n_group_with_terminal + n_dragon_pon + n_wind_pon;
-        if (n_simple == 4 && !hand_.classic_hand.duo_tile.isOrphan()) {
-            score.addYaku(1, "All simple");
+        if (!hand_.classic_hand.duo_tile.isOrphan()) {
+            n_simple++;
+        } else if (hand_.classic_hand.duo_tile.isDragon()) {
+            n_dragon_group++;
+        } else if (hand_.classic_hand.duo_tile.isWind()) {
+            n_wind_group++;
+        } else {
+            n_group_with_terminal++;
         }
+        if (hand_.classic_hand.duo_tile.suit() == BAMBOO) {
+            n_bamboo_group++;
+        } else if (hand_.classic_hand.duo_tile.suit() == DOT) {
+            n_dot_group++;
+        } else if (hand_.classic_hand.duo_tile.suit() == CHARACTER) {
+            n_character_group++;
+        }
+
         if (n_pon == 4) {
             score.addYaku(2, "All pon");
         }
@@ -450,25 +491,131 @@ HandScore WinningHand::computeScore() const {
         } else if (n_kan == 4) {
             score.addYakuman("Four kan");
         }
-        if (n_dragon_pon == 3) {
-            score.addYakuman("Big Three Dragons");
-        } else if (n_dragon_pon == 2 &&
-                   hand_.classic_hand.duo_tile.isDragon()) {
-            score.addBetterYaku(4, "Little Three Dragons");
+        if (n_dragon_group == 3) {
+            if (!hand_.classic_hand.duo_tile.isDragon()) {
+                score.addYakuman("Big Three Dragons");
+            } else {
+                score.addBetterYaku(4, "Little Three Dragons");
+            }
         }
-        if (n_wind_pon == 4) {
-            score.addYakuman("Big Four Winds", true);
-        } else if (n_wind_pon == 3 && hand_.classic_hand.duo_tile.isWind()) {
-            score.addYakuman("Little Four Winds");
+        if (n_wind_group == 4) {
+            if (!hand_.classic_hand.duo_tile.isWind()) {
+                score.addYakuman("Big Four Winds", true);
+            } else {
+                score.addYakuman("Little Four Winds");
+            }
         }
-        // Terminal (and honors) yaku
-        if (n_group_with_orphan == 4 &&
-            hand_.classic_hand.duo_tile.isOrphan()) {
-            if (n_dragon_pon + n_wind_pon == 4 &&
-                hand_.classic_hand.duo_tile.isHonor()) {
-                score.addYakuman("All Honors Hand");
-            } else if (n_group_with_terminal == 4 &&
-                       hand_.classic_hand.duo_tile.isTerminal()) {
+
+        // Double chii
+        if (isClosed() && n_chii >= 2) {
+            int n_double_chii = 0;
+            for (int i = 0; i < 4; ++i) {
+                if (hand_.classic_hand.groups[i].type ==
+                    ClassicGroupType::CHII) {
+                    for (int j = i + 1; j < 4; ++j) {
+                        if (hand_.classic_hand.groups[j].type ==
+                                ClassicGroupType::CHII &&
+                            hand_.classic_hand.groups[i].tile ==
+                                hand_.classic_hand.groups[j].tile) {
+                            n_double_chii++;
+                        }
+                    }
+                }
+            }
+            if (n_double_chii == 1) {
+                score.addYaku(1, "Double chii");
+            } else if (n_double_chii == 2) {
+                score.addBetterYaku(3, "Twice double chii");
+            }
+        }
+
+        if (n_chii >= 3) {
+            bool three_suit_chii = false;
+            bool pure_straight = false;
+            for (int i = 0; i < 1; ++i) {
+                if (hand_.classic_hand.groups[i].type !=
+                    ClassicGroupType::CHII) {
+                    continue;
+                }
+                bool found_bamboo =
+                         (hand_.classic_hand.groups[i].tile.suit() == BAMBOO),
+                     found_dot =
+                         (hand_.classic_hand.groups[i].tile.suit() == DOT),
+                     found_character =
+                         (hand_.classic_hand.groups[i].tile.suit() ==
+                          CHARACTER);
+                bool found_123 =
+                         (hand_.classic_hand.groups[i].tile.value() == 1),
+                     found_456 =
+                         (hand_.classic_hand.groups[i].tile.value() == 4),
+                     found_789 =
+                         (hand_.classic_hand.groups[i].tile.value() == 7);
+                for (int j = i + 1; j < 4; ++j) {
+                    if (hand_.classic_hand.groups[j].type !=
+                        ClassicGroupType::CHII) {
+                        continue;
+                    }
+                    if (hand_.classic_hand.groups[j].tile.value() ==
+                        hand_.classic_hand.groups[i].tile.value()) {
+                        if (hand_.classic_hand.groups[j].tile.suit() ==
+                            BAMBOO) {
+                            found_bamboo = true;
+                        } else if (hand_.classic_hand.groups[j].tile.suit() ==
+                                   DOT) {
+                            found_dot = true;
+                        } else if (hand_.classic_hand.groups[j].tile.suit() ==
+                                   CHARACTER) {
+                            found_character = true;
+                        }
+                    }
+                    if (hand_.classic_hand.groups[j].tile.suit() ==
+                        hand_.classic_hand.groups[i].tile.suit()) {
+                        if (hand_.classic_hand.groups[j].tile.value() == 1) {
+                            found_123 = true;
+                        } else if (hand_.classic_hand.groups[j].tile.value() ==
+                                   4) {
+                            found_456 = true;
+                        } else if (hand_.classic_hand.groups[j].tile.value() ==
+                                   7) {
+                            found_789 = true;
+                        }
+                    }
+                }
+                if (found_bamboo && found_dot && found_character) {
+                    three_suit_chii = true;
+                }
+                if (found_123 && found_456 && found_789) {
+                    pure_straight = true;
+                }
+            }
+            if (three_suit_chii) {
+                score.addYaku(isClosed() ? 2 : 1,
+                              (isClosed() ? "Closed " : "") +
+                                  QString("Three Suit Chii"));
+            }
+            if (pure_straight) {
+                score.addYaku(isClosed() ? 2 : 1,
+                              (isClosed() ? "Closed " : "") +
+                                  QString("Pure Straight"));
+            }
+        }
+    }
+    int n_group_with_orphan =
+        n_group_with_terminal + n_dragon_group + n_wind_group;
+
+    // Terminal (and honors) yaku
+    if (type_ == HandType::CLASSIC || type_ == HandType::PAIRS) {
+        int n_groups = (type_ == HandType::CLASSIC ? 5 : 7);
+        if (n_simple == n_groups) {
+            score.addYaku(1, "All simple");
+        }
+        if (n_group_with_orphan == n_groups) {
+            if (n_dragon_group + n_wind_group == n_groups) {
+                score.addYakuman((type_ == HandType::PAIRS
+                                      ? "Seven Honors Pairs"
+                                      : "All Honors Hand"),
+                                 type_ == HandType::PAIRS);
+            } else if (n_group_with_terminal == n_groups) {
                 if (n_chii == 0) {
                     score.addYakuman("All Terminals Hand");
                 } else {
@@ -483,6 +630,21 @@ HandScore WinningHand::computeScore() const {
                               (isClosed() ? "Closed" : "Open") +
                                   QString(" Mixed Outside Hand"));
             }
+        }
+        if (n_bamboo_group == n_groups || n_dot_group == n_groups ||
+            n_character_group == n_groups) {
+            score.addBetterYaku((isClosed() ? 6 : 5),
+                                (isClosed() ? "Closed " : "") +
+                                    QString("Full Flush Hand"));
+        } else if ((n_bamboo_group + n_character_group + n_dot_group > 0) &&
+                   ((n_bamboo_group + n_dragon_group + n_wind_group ==
+                     n_groups) ||
+                    (n_dot_group + n_dragon_group + n_wind_group == n_groups) ||
+                    (n_character_group + n_dragon_group + n_wind_group ==
+                     n_groups))) {
+            score.addBetterYaku((isClosed() ? 3 : 2),
+                                (isClosed() ? "Closed " : "") +
+                                    QString("Half Flush Hand"));
         }
     }
     if (total_doras_ > 0) {
