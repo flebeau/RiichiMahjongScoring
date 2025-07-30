@@ -9,9 +9,12 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <qcheckbox.h>
+#include <qpushbutton.h>
 #include <vector>
 
 #include "scoremodel.hpp"
+#include "winning_hand.hpp"
 
 /**
  * @brief Implements the dialog for adding the result of a turn
@@ -83,6 +86,7 @@ class AddResultDialog : public QDialog {
      * @return false otherwise
      */
     bool Player4DidRiichi() const;
+
     /**
      * @brief Returns the entered Fu score
      */
@@ -91,6 +95,8 @@ class AddResultDialog : public QDialog {
      * @brief Returns the entered Fan score
      */
     unsigned FanScore() const;
+
+    const WinningHand *winningHand() const;
 
   private slots:
     /**
@@ -102,6 +108,7 @@ class AddResultDialog : public QDialog {
      * @brief Show the How to Score message box
      */
     void showHelp();
+    void showHandDialog();
 
   private:
     /**
@@ -134,6 +141,8 @@ class AddResultDialog : public QDialog {
      * @return QGroupBox*
      */
     QGroupBox *createFuFanSelector();
+    QCheckBox *winnerRiichiButton();
+    bool WinnerDidRiichi();
 
     ScoreModel::N_Players n_players_;          /**< Number of players */
     const std::vector<QString> &player_names_; /**< Names of the players */
@@ -153,6 +162,7 @@ class AddResultDialog : public QDialog {
     QSpinBox *fu_selector_;      /**< Fu score selector */
     QLabel *fan_label_;          /**< Fan label */
     QSpinBox *fan_selector_;     /**< Fan score selector */
+    QPushButton *hand_dialog_button_; /**< Button to open hand dialog */
     QLabel *label_manual_player_1_;   /**< Label for manual score */
     QSpinBox *score_manual_player_1_; /**< Manual score selector */
     QLabel *label_manual_player_2_;   /**< Label for manual score */
@@ -167,4 +177,6 @@ class AddResultDialog : public QDialog {
     QPushButton *confirm_button_;     /**< Confirm button */
     QPushButton *cancel_button_;      /**< Cancel button */
     QPushButton *help_button_;        /**< Help button */
+
+    WinningHand *hand_ = nullptr;
 };

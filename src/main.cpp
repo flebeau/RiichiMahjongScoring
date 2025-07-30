@@ -1,9 +1,13 @@
 #include <QApplication>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
+#include <QDebug>
 #include <QDialog>
 #include <QFile>
+#include <QFontDatabase>
 #include <iostream>
+#include <qfont.h>
+#include <qfontdatabase.h>
 
 #include "mainwindow.hpp"
 #include "scoremodel.hpp"
@@ -19,8 +23,7 @@ int main(int argc, char *argv[]) {
     parser.addVersionOption();
 
     // Option for analysing a game
-    QCommandLineOption analyze_option(QStringList() << "a"
-                                                    << "analyze",
+    QCommandLineOption analyze_option(QStringList() << "a" << "analyze",
                                       QDialog::tr("Analyze a scoresheet file."),
                                       "file");
     parser.addOption(analyze_option);

@@ -1,15 +1,16 @@
 #include "turnresult.hpp"
-#include <sstream>
+#include "winning_hand.hpp"
+#include <iostream>
 
 TurnResult::TurnResult(int _east_player, int _winner, int _ron_victory,
                        int _loser, bool _riichi_player_1, bool _riichi_player_2,
                        bool _riichi_player_3, bool _riichi_player_4,
-                       int _fu_score, int _fan_score)
+                       int _fu_score, int _fan_score, const WinningHand *hand)
     : east_player_(_east_player), winner_(_winner), ron_victory_(_ron_victory),
       loser_(_loser), riichi_player_1(_riichi_player_1),
       riichi_player_2(_riichi_player_2), riichi_player_3(_riichi_player_3),
       riichi_player_4(_riichi_player_4), fu_score_(_fu_score),
-      fan_score_(_fan_score) {}
+      fan_score_(_fan_score), hand_(hand) {}
 
 TurnResult::TurnResult(std::vector<int> scores)
     : ron_victory_(2), scores_(scores) {}
@@ -23,10 +24,21 @@ TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
     if (ron_victory_ <= 1) {
         in >> loser_ >> r1 >> r2 >> r3 >> r4 >> fu_score_ >> fan_score_;
 
-        riichi_player_1 = static_cast<bool>(r1);
-        riichi_player_2 = static_cast<bool>(r2);
-        riichi_player_3 = static_cast<bool>(r3);
-        riichi_player_4 = static_cast<bool>(r4);
+        riichi_player_1 = r1 != 0;
+        riichi_player_2 = r2 != 0;
+        riichi_player_3 = r3 != 0;
+        riichi_player_4 = r4 != 0;
+
+        QString hand_string;
+        in >> hand_string;
+        if (hand_string.length() > 0) {
+            hand_ = new WinningHand(hand_string,
+                                    (winner_ == 0 && riichi_player_1) ||
+                                        (winner_ == 1 && riichi_player_2) ||
+                                        (winner_ == 2 && riichi_player_3) ||
+                                        (winner_ == 3 && riichi_player_4),
+                                    ron_victory_ == 1);
+        }
     } else { // Manual result
         if (n_players == 3) {
             scores_ = std::vector<int>(3, 0);
@@ -114,6 +126,9 @@ void TurnResult::writeToTextStream(QTextStream &out) const {
             << loser_ << " " << riichi_player_1 << " " << riichi_player_2 << " "
             << riichi_player_3 << " " << riichi_player_4 << " " << fu_score_
             << " " << fan_score_;
+        if (hand_ != nullptr) {
+            out << " " << hand_->toString();
+        }
     } else { // Manual score
         out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
             << scores_[0] << " " << scores_[1] << " " << scores_[2];
@@ -133,6 +148,7 @@ bool TurnResult::riichiPlayer3() const { return riichi_player_3; }
 bool TurnResult::riichiPlayer4() const { return riichi_player_4; }
 int TurnResult::fuScore() const { return fu_score_; }
 int TurnResult::fanScore() const { return fan_score_; }
+const WinningHand *TurnResult::hand() const { return hand_; }
 
 int TurnResult::Tabular1(int fu, int fan) {
     if (fan == 1) {

@@ -1,8 +1,12 @@
+#include <QCheckBox>
+#include <QDebug>
 #include <QGridLayout>
 #include <QHBoxLayout>
 
 #include "addresultdialog.hpp"
+#include "handdialog.hpp"
 #include "howtoscoredialog.hpp"
+#include "winning_hand.hpp"
 
 AddResultDialog::AddResultDialog(QWidget *parent,
                                  ScoreModel::N_Players _n_players,
@@ -23,6 +27,8 @@ AddResultDialog::AddResultDialog(QWidget *parent,
       fu_label_(new QLabel(tr("Fu score"))), fu_selector_(new QSpinBox),
       fan_label_(new QLabel(tr("Bonus fan score"))),
       fan_selector_(new QSpinBox),
+      hand_dialog_button_(new QPushButton(
+          style()->standardIcon(QStyle::SP_FileDialogDetailedView), "")),
       label_manual_player_1_(new QLabel(tr("%1 scored").arg(player_names_[0]))),
       score_manual_player_1_(new QSpinBox),
       label_manual_player_2_(new QLabel(tr("%1 scored").arg(player_names_[1]))),
@@ -60,6 +66,10 @@ AddResultDialog::AddResultDialog(QWidget *parent,
             &AddResultDialog::refreshLoserSelector);
     connect(winner_selector_, &QComboBox::currentTextChanged, this,
             &AddResultDialog::refreshLoserSelector);
+
+    // Handle hand
+    connect(hand_dialog_button_, &QPushButton::clicked, this,
+            &AddResultDialog::showHandDialog);
 
     // Connect confirm and cancel buttons
     connect(confirm_button_, &QPushButton::clicked, this,
@@ -221,8 +231,31 @@ bool AddResultDialog::Player4DidRiichi() const {
     return riichi_player_4_->isChecked();
 }
 
+QCheckBox *AddResultDialog::winnerRiichiButton() {
+    if (winner_selector_->currentText() == player_names_[0]) {
+        return riichi_player_1_;
+    } else if (winner_selector_->currentText() == player_names_[1]) {
+        return riichi_player_2_;
+    } else if (winner_selector_->currentText() == player_names_[2]) {
+        return riichi_player_3_;
+    } else if (winner_selector_->currentText() == player_names_[3]) {
+        return riichi_player_4_;
+    }
+    return nullptr;
+}
+
+bool AddResultDialog::WinnerDidRiichi() {
+    const QCheckBox *button = winnerRiichiButton();
+    if (button != nullptr) {
+        return button->isChecked();
+    }
+    return false;
+}
+
 unsigned AddResultDialog::FuScore() const { return fu_selector_->value(); }
 unsigned AddResultDialog::FanScore() const { return fan_selector_->value(); }
+
+const WinningHand *AddResultDialog::winningHand() const { return hand_; }
 
 void AddResultDialog::refreshLoserSelector() {
     // If ron button is not checked, loser selector is disabled
@@ -254,6 +287,28 @@ void AddResultDialog::showHelp() {
     HowToScoreDialog how_to_score_dialog;
 
     how_to_score_dialog.exec();
+}
+
+void AddResultDialog::showHandDialog() {
+    HandDialog hand_dialog(this, hand_, ron_button_->isChecked(),
+                           east_selector_->currentText() ==
+                               winner_selector_->currentText(),
+                           WinnerDidRiichi());
+    if (hand_dialog.exec() == QDialog::Accepted) {
+        if (hand_ != nullptr) {
+            delete hand_;
+        }
+        hand_ = new WinningHand(hand_dialog.hand());
+        hand_dialog_button_->setIcon(hand_dialog_button_->style()->standardIcon(
+            QStyle::SP_FileDialogContentsView));
+        HandScore score = hand_->computeScore();
+        fu_selector_->setValue(score.totalFu());
+        fan_selector_->setValue(score.totalFan());
+        QCheckBox *riichi_button = winnerRiichiButton();
+        if (hand_->isRiichi() && !riichi_button->isChecked()) {
+            riichi_button->setChecked(true);
+        }
+    }
 }
 
 QGroupBox *AddResultDialog::createEastSelector() {
@@ -305,6 +360,8 @@ QGroupBox *AddResultDialog::createRiichiInput() {
 }
 
 QGroupBox *AddResultDialog::createFuFanSelector() {
+    hand_dialog_button_->setIconSize(QSize(30, 30));
+
     QGroupBox *group_box = new QGroupBox(tr("Fu / Fan score"));
 
     QGridLayout *layout = new QGridLayout;
@@ -313,6 +370,10 @@ QGroupBox *AddResultDialog::createFuFanSelector() {
     layout->addWidget(fu_selector_, 0, 1);
     layout->addWidget(fan_label_, 1, 0);
     layout->addWidget(fan_selector_, 1, 1);
+    layout->addWidget(hand_dialog_button_, 0, 2, 2, 1);
+    layout->setColumnStretch(0, 0);
+    layout->setColumnStretch(1, 1);
+    layout->setColumnStretch(2, 0);
 
     group_box->setLayout(layout);
     return group_box;

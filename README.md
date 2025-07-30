@@ -33,11 +33,12 @@ The generated executable program is located in `build/RiichiMahjongScoring`.
 
 ## Screenshots
 
-![Main window](screenshots/main_window.png)
+![Main window](screenshots/main_window2.png)
 
-![New game dialog](screenshots/new_game_dialog.png)
+![New game dialog](screenshots/new_game_dialog2.png)
 
-![Ron / Tsumo victory](screenshots/ron_tsumo_victory.png)
+![Ron / Tsumo victory](screenshots/ron_tsumo_victory2.png)
 
-![Scoring help dialog](screenshots/scoring_help_dialog.png)
+![Winning hand dialog](screenshots/winning_hand.png)
 
+![Turn result detail](screenshots/turn_result.png)

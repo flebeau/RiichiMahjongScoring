@@ -1,6 +1,7 @@
 #include <QtWidgets>
 #include <iostream>
 
+#include "handdialog.hpp"
 #include "howtoscoredialog.hpp"
 #include "mainwindow.hpp"
 #include "newgamedialog.hpp"
@@ -110,6 +111,11 @@ void MainWindow::load() {
         }
         current_save_file_ = load_file;
     }
+}
+
+void MainWindow::testHandSelector() {
+    HandDialog dialog(this);
+    dialog.exec();
 }
 
 void MainWindow::createActions() {

@@ -19,7 +19,7 @@ HowToScoreDialog::HowToScoreDialog()
         "align=\"right\">2</td></tr>"
         "<tr><td align=\"left\">Pair is player's wind</td><td "
         "align=\"right\">2</td></tr>"
-        "<tr><td align=\"left\">Pair is dominant wind</td><td "
+        "<tr><td align=\"left\">Pair is prevailing wind</td><td "
         "align=\"right\">2</td></tr>"
         "<tr><td align=\"left\">Pair is dragon</td><td "
         "align=\"right\">2</td></tr>"
