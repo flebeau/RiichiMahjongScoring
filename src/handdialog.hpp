@@ -135,9 +135,9 @@ class HandDialog : public QDialog {
     QSpinBox *doras_;
     QCheckBox *riichi_button_;
     QCheckBox *ippatsu_button_;
-    QLabel *dominant_wind_label_;
+    QLabel *prevailing_wind_label_;
     QLabel *player_wind_label_;
-    QComboBox *dominant_wind_selector_;
+    QComboBox *prevailing_wind_selector_;
     QComboBox *player_wind_selector_;
     /* Score display */
     QLabel *score_text_;

@@ -119,23 +119,23 @@ QString HandScore::toString() const {
 }
 
 WinningHand::WinningHand(const ClassicHand &classic_hand,
-                         const Tile &dominant_wind, const Tile &player_wind,
+                         const Tile &prevailing_wind, const Tile &player_wind,
                          bool riichi, bool ippatsu, bool ron, int total_doras)
     : type_(HandType::CLASSIC), hand_(classic_hand), riichi_(riichi),
       ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras),
-      dominant_wind_(dominant_wind), player_wind_(player_wind) {}
-WinningHand::WinningHand(Tile seven_pairs[7], const Tile &dominant_wind,
+      prevailing_wind_(prevailing_wind), player_wind_(player_wind) {}
+WinningHand::WinningHand(Tile seven_pairs[7], const Tile &prevailing_wind,
                          const Tile &player_wind, bool riichi, bool ippatsu,
                          bool ron, int total_doras)
     : type_(HandType::PAIRS), hand_(seven_pairs), riichi_(riichi),
       ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras),
-      dominant_wind_(dominant_wind), player_wind_(player_wind) {}
-WinningHand::WinningHand(Tile duo_orphans_hand, const Tile &dominant_wind,
+      prevailing_wind_(prevailing_wind), player_wind_(player_wind) {}
+WinningHand::WinningHand(Tile duo_orphans_hand, const Tile &prevailing_wind,
                          const Tile &player_wind, bool riichi, bool ippatsu,
                          bool ron, int total_doras)
     : type_(HandType::ORPHANS), hand_(duo_orphans_hand), riichi_(riichi),
       ippatsu_(ippatsu), ron_(ron), total_doras_(total_doras),
-      dominant_wind_(dominant_wind), player_wind_(player_wind) {}
+      prevailing_wind_(prevailing_wind), player_wind_(player_wind) {}
 
 HandType WinningHand::type() const { return type_; }
 HandTiles WinningHand::hand() const { return hand_; }
@@ -207,7 +207,7 @@ QString WinningHand::toString() const {
     }
     result += "+" + QString(ippatsu_ ? "1" : "0") + "-" +
               QString::number(total_doras_) + "-" +
-              windTileToString(dominant_wind_) + "-" +
+              windTileToString(prevailing_wind_) + "-" +
               windTileToString(player_wind_);
     return result;
 }
@@ -248,7 +248,7 @@ QString WinningHand::toUTF8Symbols() const {
     return result;
 }
 
-const Tile &WinningHand::dominantWind() const { return dominant_wind_; }
+const Tile &WinningHand::prevailingWind() const { return prevailing_wind_; }
 const Tile &WinningHand::playerWind() const { return player_wind_; }
 
 WinningHand::WinningHand(const QString &description, bool riichi, bool ron)
@@ -278,14 +278,14 @@ WinningHand::WinningHand(const QString &description, bool riichi, bool ron)
     infos.replace('-', ' ');
     QTextStream in2(&infos);
     int ippatsu;
-    QString dominant, player;
-    in2 >> ippatsu >> total_doras_ >> dominant >> player;
+    QString prevailing, player;
+    in2 >> ippatsu >> total_doras_ >> prevailing >> player;
     if (ippatsu != 0) {
         ippatsu_ = true;
     } else {
         ippatsu_ = false;
     }
-    dominant_wind_ = stringToWindTile(dominant);
+    prevailing_wind_ = stringToWindTile(prevailing);
     player_wind_ = stringToWindTile(player);
 }
 
@@ -333,8 +333,8 @@ HandScore WinningHand::computeScore() const {
             score.addFu(2, "Dragon Pair");
         }
         if (hand_.classic_hand.duo_tile.isWind()) {
-            if (hand_.classic_hand.duo_tile == dominant_wind_) {
-                score.addFu(2, "Dominant wind pair");
+            if (hand_.classic_hand.duo_tile == prevailing_wind_) {
+                score.addFu(2, "prevailing wind pair");
             } else if (hand_.classic_hand.duo_tile == player_wind_) {
                 score.addFu(2, "Player's wind pair");
             }
@@ -454,7 +454,7 @@ HandScore WinningHand::computeScore() const {
                 }
                 if (group.tile.isWind()) {
                     n_wind_group++;
-                    if (group.tile == dominant_wind_) {
+                    if (group.tile == prevailing_wind_) {
                         score.addYaku(1, "Prevailing wind pon");
                     }
                     if (group.tile == player_wind_) {

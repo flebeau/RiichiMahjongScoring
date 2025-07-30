@@ -93,13 +93,13 @@ class HandScore {
 class WinningHand {
   public:
     WinningHand(){};
-    WinningHand(const ClassicHand &classic_hand, const Tile &dominant_wind,
+    WinningHand(const ClassicHand &classic_hand, const Tile &prevailing_wind,
                 const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
-    WinningHand(Tile seven_pairs_hand[7], const Tile &dominant_wind,
+    WinningHand(Tile seven_pairs_hand[7], const Tile &prevailing_wind,
                 const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
-    WinningHand(Tile duo_orphans_hand, const Tile &dominant_wind,
+    WinningHand(Tile duo_orphans_hand, const Tile &prevailing_wind,
                 const Tile &player_wind, bool riichi = false,
                 bool ippatsu = false, bool ron = false, int total_doras = 0);
     WinningHand(const QString &description, bool riichi = false,
@@ -116,7 +116,7 @@ class WinningHand {
     int totalDoras() const;
     QString toString() const;
     QString toUTF8Symbols() const;
-    const Tile &dominantWind() const;
+    const Tile &prevailingWind() const;
     const Tile &playerWind() const;
 
     /* Scoring methods */
@@ -134,6 +134,6 @@ class WinningHand {
     bool ippatsu_;
     bool ron_;
     int total_doras_;
-    Tile dominant_wind_;
+    Tile prevailing_wind_;
     Tile player_wind_;
 };

@@ -225,9 +225,9 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
       duo_group_(new DuoGroupSelector), doras_(new QSpinBox),
       riichi_button_(new QCheckBox(tr("Riichi"))),
       ippatsu_button_(new QCheckBox(tr("Ippatsu"))),
-      dominant_wind_label_(new QLabel(tr("Dominant"))),
+      prevailing_wind_label_(new QLabel(tr("Prevailing"))),
       player_wind_label_(new QLabel(tr("Player"))),
-      dominant_wind_selector_(new QComboBox),
+      prevailing_wind_selector_(new QComboBox),
       player_wind_selector_(new QComboBox), score_text_(new QLabel("")),
       confirm_button_(new QPushButton(tr("&Confirm"))),
       cancel_button_(new QPushButton(tr("C&ancel"))) {
@@ -280,12 +280,14 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
     doras->setLayout(doras_layout);
     victory_infos_layout->addWidget(doras, 1, 0, 1, 1);
 
-    dominant_wind_selector_->addItem(" E ", static_cast<int>(HonorValue::EAST));
-    dominant_wind_selector_->addItem(" S ",
-                                     static_cast<int>(HonorValue::SOUTH));
-    dominant_wind_selector_->addItem(" W ", static_cast<int>(HonorValue::WEST));
-    dominant_wind_selector_->addItem(" N ",
-                                     static_cast<int>(HonorValue::NORTH));
+    prevailing_wind_selector_->addItem(" E ",
+                                       static_cast<int>(HonorValue::EAST));
+    prevailing_wind_selector_->addItem(" S ",
+                                       static_cast<int>(HonorValue::SOUTH));
+    prevailing_wind_selector_->addItem(" W ",
+                                       static_cast<int>(HonorValue::WEST));
+    prevailing_wind_selector_->addItem(" N ",
+                                       static_cast<int>(HonorValue::NORTH));
     if (east_player) {
         player_wind_selector_->addItem(" E ",
                                        static_cast<int>(HonorValue::EAST));
@@ -299,8 +301,8 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
     }
     QGroupBox *winds_group = new QGroupBox(tr("Winds"));
     QGridLayout *winds = new QGridLayout;
-    winds->addWidget(dominant_wind_label_, 0, 0, 1, 1, Qt::AlignRight);
-    winds->addWidget(dominant_wind_selector_, 0, 1, 1, 1);
+    winds->addWidget(prevailing_wind_label_, 0, 0, 1, 1, Qt::AlignRight);
+    winds->addWidget(prevailing_wind_selector_, 0, 1, 1, 1);
     winds->addWidget(player_wind_label_, 1, 0, 1, 1, Qt::AlignRight);
     winds->addWidget(player_wind_selector_, 1, 1, 1, 1);
     winds->setHorizontalSpacing(20);
@@ -342,7 +344,7 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
     // &HandDialog::onChange);
     connect(riichi_button_, &QCheckBox::toggled, this, &HandDialog::onChange);
     connect(ippatsu_button_, &QCheckBox::toggled, this, &HandDialog::onChange);
-    connect(dominant_wind_selector_, &QComboBox::currentTextChanged, this,
+    connect(prevailing_wind_selector_, &QComboBox::currentTextChanged, this,
             &HandDialog::onChange);
     connect(player_wind_selector_, &QComboBox::currentTextChanged, this,
             &HandDialog::onChange);
@@ -409,8 +411,9 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
         doras_->setValue(hand->totalDoras());
         player_wind_selector_->setCurrentIndex(
             player_wind_selector_->findData(hand->playerWind().value()));
-        dominant_wind_selector_->setCurrentIndex(
-            dominant_wind_selector_->findData(hand->dominantWind().value()));
+        prevailing_wind_selector_->setCurrentIndex(
+            prevailing_wind_selector_->findData(
+                hand->prevailingWind().value()));
     }
     onChange();
 }
@@ -432,9 +435,10 @@ void HandDialog::onChange() {
         hand_represented_ = WinningHand(
             ClassicHand(first_group, second_group, third_group, fourth_group,
                         duo_tile),
-            Tile(HONOR, dominant_wind_selector_
-                            ->itemData(dominant_wind_selector_->currentIndex())
-                            .toInt()),
+            Tile(HONOR,
+                 prevailing_wind_selector_
+                     ->itemData(prevailing_wind_selector_->currentIndex())
+                     .toInt()),
             Tile(HONOR, player_wind_selector_
                             ->itemData(player_wind_selector_->currentIndex())
                             .toInt()),
@@ -448,9 +452,10 @@ void HandDialog::onChange() {
         }
         hand_represented_ = WinningHand(
             duo_tiles,
-            Tile(HONOR, dominant_wind_selector_
-                            ->itemData(dominant_wind_selector_->currentIndex())
-                            .toInt()),
+            Tile(HONOR,
+                 prevailing_wind_selector_
+                     ->itemData(prevailing_wind_selector_->currentIndex())
+                     .toInt()),
             Tile(HONOR, player_wind_selector_
                             ->itemData(player_wind_selector_->currentIndex())
                             .toInt()),
