@@ -28,10 +28,10 @@ ClassicGroup::ClassicGroup(const QString &descr) {
     }
     tile = Tile(descr.mid(1, 2));
     if (descr.length() > 3) {
-        if (descr[2] == RON_MELDED_CHAR[0]) {
+        if (descr[3] == RON_MELDED_CHAR[0]) {
             ron_meld = true;
             melded = true;
-        } else if (descr[2] == MELDED_CHAR[0]) {
+        } else if (descr[3] == MELDED_CHAR[0]) {
             melded = true;
         }
     }
@@ -144,11 +144,15 @@ bool WinningHand::isIppatsu() const { return ippatsu_; }
 bool WinningHand::isRon() const { return ron_; }
 bool WinningHand::isTsumo() const { return !ron_; }
 bool WinningHand::isClosed() const {
-    return (type_ != HandType::CLASSIC) ||
-           (!hand_.classic_hand.groups[0].melded &&
-            !hand_.classic_hand.groups[1].melded &&
-            !hand_.classic_hand.groups[2].melded &&
-            !hand_.classic_hand.groups[3].melded);
+    if (type_ != HandType::CLASSIC) {
+        return true;
+    }
+    for (const auto &group : hand_.classic_hand.groups) {
+        if (group.melded && !group.ron_meld) {
+            return false;
+        }
+    }
+    return true;
 }
 int WinningHand::totalDoras() const { return total_doras_; }
 
@@ -208,7 +212,8 @@ QString WinningHand::toString() const {
     return result;
 }
 
-static QChar HIDDEN_TILE = QChar(0x1F02B);
+static char32_t HIDDEN_TILE_CHAR[1] = {0x1F02B};
+static QString HIDDEN_TILE = QString::fromUcs4(HIDDEN_TILE_CHAR, 1);
 
 QString WinningHand::toUTF8Symbols() const {
     QString result;

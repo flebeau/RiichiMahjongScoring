@@ -1,7 +1,8 @@
 #include <QDebug>
+#include <QFontDatabase>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <qfontdatabase.h>
+#include <qgroupbox.h>
 
 #include "showdetaildialog.hpp"
 
@@ -57,6 +58,7 @@ ShowDetailDialog::ShowDetailDialog(QWidget *parent,
     /* Init score info */
     std::vector<int> score_change =
         turn_result.computeScoreChange(static_cast<int>(n_players));
+    QGroupBox *hand_details = nullptr;
     // If any score change, init the tabular
     if (score_change[0] != 0 || score_change[1] != 0 || score_change[2] != 0 ||
         (n_players == ScoreModel::N_Players::FOUR_PLAYERS &&
@@ -105,10 +107,17 @@ ShowDetailDialog::ShowDetailDialog(QWidget *parent,
         }
         label_content += "</table>\n";
         if (turn_result.hand() != nullptr) {
-            label_content +=
-                "<p style=\"font-size: 3rem; text-align: center;\">" +
-                turn_result.hand()->toUTF8Symbols() + "</p>\n";
-            label_content += turn_result.hand()->computeScore().toString();
+            hand_details = new QGroupBox(tr("Hand details"));
+            QLabel *hand_score =
+                new QLabel(turn_result.hand()->computeScore().toString());
+
+            QLabel *hand_draw = new QLabel(turn_result.hand()->toUTF8Symbols());
+            hand_draw->setAlignment(Qt::AlignCenter);
+            hand_draw->setStyleSheet("font-size: 48pt");
+            QVBoxLayout *hand_layout = new QVBoxLayout;
+            hand_layout->addWidget(hand_draw);
+            hand_layout->addWidget(hand_score);
+            hand_details->setLayout(hand_layout);
         }
     }
 
@@ -121,6 +130,9 @@ ShowDetailDialog::ShowDetailDialog(QWidget *parent,
     /* Main Layout of the dialog  */
     QVBoxLayout *main_layout = new QVBoxLayout;
     main_layout->addWidget(label_info_);
+    if (hand_details != nullptr) {
+        main_layout->addWidget(hand_details);
+    }
     main_layout->addWidget(ok_button_);
 
     setLayout(main_layout);

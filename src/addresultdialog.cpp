@@ -308,7 +308,6 @@ void AddResultDialog::showHandDialog() {
         if (hand_->isRiichi() && !riichi_button->isChecked()) {
             riichi_button->setChecked(true);
         }
-        qDebug() << hand_->toString() << "\n";
     }
 }
 

@@ -21,7 +21,7 @@ QString Tile::toUTF8() const {
     } else {
         code += 24 + value_;
     }
-    char32_t tile[2] = {code, '\0'};
+    char32_t tile[1] = {code};
     return QString::fromUcs4(tile, 1);
 }
 
