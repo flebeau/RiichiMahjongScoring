@@ -9,7 +9,7 @@ QString Tile::toString() const { return QString::number(value_) + suit_; }
 QString Tile::toUTF8() const {
     char32_t code = 0x1F000; // 1F000 is the base for Mahjong tiles in Unicode
     if (suit_ == HONOR) {
-        if (code <= 4) {
+        if (value_ <= 4) {
             code += value_ - 1;
         } else {
             code += 11 - value_;
