@@ -44,11 +44,10 @@ with Progress(
                 calc_file.write(game_result)
         game_result_list = game_result.strip().split("\n")
         n_players = int(game_result_list[0])
-        results = {}
         for player in range(n_players):
-            results[game_result_list[player + 1]] = []
             if game_result_list[player + 1] not in game_results:
                 game_results[game_result_list[player + 1]] = []
+        results = {player: [] for player in game_results}
         for turn_result in game_result_list[n_players + 1 :]:
             turn_result_list = turn_result.split()
             for i in range(len(turn_result_list)):
@@ -68,13 +67,36 @@ table_all = Table(
 )
 PART_SIZE = 25
 n_sessions = max(len(player_results) for player_results in game_results.values())
+for player in game_results:
+    if len(game_results[player]) < n_sessions:
+        game_results[player] = [
+            [] for _ in range(n_sessions - len(game_results[player]))
+        ] + game_results[player]
 n_parts = n_sessions // PART_SIZE
 if n_sessions % PART_SIZE != 0:
     n_parts += 1
+gamers_presence_parts = {
+    player: [
+        i
+        for i in range(
+            0,
+            n_sessions,
+            PART_SIZE,
+        )
+        if any(len(session) > 0 for session in game_results[player][i : i + PART_SIZE])
+    ]
+    for player in game_results
+}
+
+
 table_parts = [
     Table(
         Column("Mesure \\ Joueurs", ratio=None, justify="center"),
-        *[Column(player, ratio=1, justify="center") for player in players],
+        *[
+            Column(player, ratio=1, justify="center")
+            for player in players
+            if i in gamers_presence_parts[player]
+        ],
         caption="Mesures sur les parties "
         + str(i + 1)
         + "~"
@@ -105,16 +127,23 @@ turn_gains = {
     player: {
         "parts": [
             (
-                min(
-                    min(session) for session in game_results[player][i : i + PART_SIZE]
-                ),
-                gain_sum[player]["parts"][i // PART_SIZE]
-                / sum(
-                    len(session) for session in game_results[player][i : i + PART_SIZE]
-                ),
-                max(
-                    max(session) for session in game_results[player][i : i + PART_SIZE]
-                ),
+                (
+                    min(
+                        min(session, default=10000000)
+                        for session in game_results[player][i : i + PART_SIZE]
+                    ),
+                    gain_sum[player]["parts"][i // PART_SIZE]
+                    / sum(
+                        len(session)
+                        for session in game_results[player][i : i + PART_SIZE]
+                    ),
+                    max(
+                        max(session, default=0)
+                        for session in game_results[player][i : i + PART_SIZE]
+                    ),
+                )
+                if i in gamers_presence_parts[player]
+                else ()
             )
             for i in range(0, len(game_results[player]), PART_SIZE)
         ]
@@ -123,10 +152,10 @@ turn_gains = {
 }
 for player in game_results:
     turn_gains[player]["total"] = (
-        min(v[0] for v in turn_gains[player]["parts"]),
+        min(v[0] for v in turn_gains[player]["parts"] if len(v) > 0),
         gain_sum[player]["total"]
-        / sum(len(session) for session in game_results[player]),
-        max(v[2] for v in turn_gains[player]["parts"]),
+        / sum(len(session) for session in game_results[player] if len(session) > 0),
+        max(v[2] for v in turn_gains[player]["parts"] if len(v) > 0),
     )
 
 # Min, moyenne et max des scores de fin de partie
@@ -143,6 +172,8 @@ session_scores = {
                 / len(end_results[player][i : i + PART_SIZE]),
                 max(session for session in end_results[player][i : i + PART_SIZE]),
             )
+            if i in gamers_presence_parts[player]
+            else ()
             for i in range(0, len(end_results[player]), PART_SIZE)
         ]
     }
@@ -150,10 +181,10 @@ session_scores = {
 }
 for player in game_results:
     session_scores[player]["total"] = (
-        min(v[0] for v in session_scores[player]["parts"]),
+        min(v[0] for v in session_scores[player]["parts"] if len(v) > 0),
         (gain_sum[player]["total"] + 30000 * len(end_results[player]))
         / len(end_results[player]),
-        max(v[2] for v in session_scores[player]["parts"]),
+        max(v[2] for v in session_scores[player]["parts"] if len(v) > 0),
     )
 
 # Nombre de parties gagnantes
@@ -161,6 +192,8 @@ winning_games = {
     player: {
         "parts": [
             len([res for res in end_results[player][i : i + PART_SIZE] if res >= 30000])
+            if i in gamers_presence_parts[player]
+            else 0
             for i in range(0, len(end_results[player]), PART_SIZE)
         ]
     }
@@ -171,7 +204,11 @@ for player in game_results:
 
 # Constructions des tableaux
 table_all.add_row(
-    "Parties jouées", *[str(len(game_results[player])) for player in players]
+    "Parties jouées",
+    *[
+        str(len([session for session in game_results[player] if len(session) > 0]))
+        for player in players
+    ],
 )
 table_all.add_row(
     "Somme des gains", *[str(gain_sum[player]["total"]) for player in players]
@@ -200,13 +237,18 @@ table_all.add_row(
 for p in range(n_parts):
     table_parts[p].add_row(
         "Somme des gains",
-        *[str(gain_sum[player]["parts"][p]) for player in players],
+        *[
+            str(gain_sum[player]["parts"][p])
+            for player in players
+            if p * PART_SIZE in gamers_presence_parts[player]
+        ],
     )
     table_parts[p].add_row(
         "Min, moyenne et max des gains",
         *[
             f"({turn_gains[player]['parts'][p][0]}, {turn_gains[player]['parts'][p][1]:.2f}, {turn_gains[player]['parts'][p][2]})"
             for player in players
+            if p * PART_SIZE in gamers_presence_parts[player]
         ],
     )
     table_parts[p].add_row(
@@ -214,6 +256,7 @@ for p in range(n_parts):
         *[
             f"({session_scores[player]['parts'][p][0]}, {session_scores[player]['parts'][p][1]:.2f}, {session_scores[player]['parts'][p][2]})"
             for player in players
+            if p * PART_SIZE in gamers_presence_parts[player]
         ],
     )
     table_parts[p].add_row(
@@ -221,6 +264,7 @@ for p in range(n_parts):
         *[
             f"{winning_games[player]['parts'][p]} ({int(100 * winning_games[player]['parts'][p] / len(end_results[player][p * PART_SIZE : (p + 1) * PART_SIZE]))}%)"
             for player in players
+            if p * PART_SIZE in gamers_presence_parts[player]
         ],
     )
 
