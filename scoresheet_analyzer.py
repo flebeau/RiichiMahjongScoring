@@ -11,9 +11,19 @@ from rich.progress import (
     MofNCompleteColumn,
     TimeRemainingColumn,
 )
+import math
+
+
+def floor(x):
+    if math.isnan(x):
+        return x
+    return math.floor(x)
+
 
 os.chdir(os.path.dirname(__file__))
 game_results = {}
+tsumos = {}
+rons = {}
 mss_files = []
 for file in os.listdir("scoresheets"):
     if file.endswith(".mss"):
@@ -43,17 +53,44 @@ with Progress(
             with open("scoresheets/" + file + "calc", "w") as calc_file:
                 calc_file.write(game_result)
         game_result_list = game_result.strip().split("\n")
+
+        with open("scoresheets/" + file, "r") as mss_file:
+            game_details = mss_file.read()
+        game_details_list = game_details.strip().split("\n")
+
         n_players = int(game_result_list[0])
+        game_details_list.pop(
+            n_players + 1
+        )  # Remove init score from file to "align" with calc file
         for player in range(n_players):
             if game_result_list[player + 1] not in game_results:
                 game_results[game_result_list[player + 1]] = []
+            if game_details_list[player + 1] not in tsumos:
+                tsumos[game_details_list[player + 1]] = []
+            if game_details_list[player + 1] not in rons:
+                rons[game_details_list[player + 1]] = []
+
         results = {player: [] for player in game_results}
         for turn_result in game_result_list[n_players + 1 :]:
             turn_result_list = turn_result.split()
             for i in range(len(turn_result_list)):
                 results[game_result_list[i + 1]].append(int(turn_result_list[i]))
-        for player in results:
-            game_results[player].append(results[player])
+        for player in game_results:
+            if player in results:
+                game_results[player].append(results[player])
+            else:
+                game_results[player].append([])
+
+        for player in tsumos:
+            tsumos[player].append(0)
+            rons[player].append(0)
+        for turn_detail in game_details_list[n_players + 1 :]:
+            turn_detail_list = turn_detail.split()
+            if int(turn_detail_list[2]) == 0:  # Check if tsumo victory
+                tsumos[game_details_list[int(turn_detail_list[1]) + 1]][-1] += 1
+            elif int(turn_detail_list[2]) == 1:
+                rons[game_details_list[int(turn_detail_list[1]) + 1]][-1] += 1
+
         progress.advance(task)
 
 # Ici, game_results représente l'ensemble des gains obtenus par chaque joueur.
@@ -72,6 +109,12 @@ for player in game_results:
         game_results[player] = [
             [] for _ in range(n_sessions - len(game_results[player]))
         ] + game_results[player]
+    if len(tsumos[player]) < n_sessions:
+        tsumos[player] = [0 for _ in range(n_sessions - len(tsumos[player]))] + tsumos[
+            player
+        ]
+    if len(rons[player]) < n_sessions:
+        rons[player] = [0 for _ in range(n_sessions - len(rons[player]))] + rons[player]
 n_parts = n_sessions // PART_SIZE
 if n_sessions % PART_SIZE != 0:
     n_parts += 1
@@ -201,7 +244,56 @@ winning_games = {
 }
 for player in game_results:
     winning_games[player]["total"] = sum(winning_games[player]["parts"])
+print(tsumos)
 
+# Nombres de tsumo
+tsumo_rounds = {
+    player: {
+        "parts": [
+            sum([tsum for tsum in tsumos[player][i : i + PART_SIZE]])
+            if i in gamers_presence_parts[player]
+            else 0
+            for i in range(0, len(end_results[player]), PART_SIZE)
+        ]
+    }
+    for player in tsumos
+}
+for player in tsumos:
+    tsumo_rounds[player]["total"] = sum(tsumo_rounds[player]["parts"])
+
+# Nombres de rons
+ron_rounds = {
+    player: {
+        "parts": [
+            sum([ron for ron in rons[player][i : i + PART_SIZE]])
+            if i in gamers_presence_parts[player]
+            else 0
+            for i in range(0, len(end_results[player]), PART_SIZE)
+        ]
+    }
+    for player in rons
+}
+for player in rons:
+    ron_rounds[player]["total"] = sum(ron_rounds[player]["parts"])
+
+# Pourcentage de victoires qui ont lieu par tsumo
+tsumo_prop = {
+    player: {
+        "parts": [
+            tsumo_rounds[player]["parts"][p]
+            / (tsumo_rounds[player]["parts"][p] + ron_rounds[player]["parts"][p])
+            if tsumo_rounds[player]["parts"][p] > 0
+            or ron_rounds[player]["parts"][p] > 0
+            else math.nan
+            for p in range(len(tsumo_rounds[player]["parts"]))
+        ]
+    }
+    for player in tsumos
+}
+for player in tsumo_prop:
+    tsumo_prop[player]["total"] = tsumo_rounds[player]["total"] / (
+        tsumo_rounds[player]["total"] + ron_rounds[player]["total"]
+    )
 # Constructions des tableaux
 table_all.add_row(
     "Parties jouées",
@@ -230,9 +322,21 @@ table_all.add_row(
 table_all.add_row(
     "Nbre de parties gagnantes (%)",
     *[
-        f"{winning_games[player]['total']} ({int(100 * winning_games[player]['total'] / len(end_results[player]))}%)"
+        f"{winning_games[player]['total']} ({floor(100 * winning_games[player]['total'] / len(end_results[player]))}%)"
         for player in players
     ],
+)
+table_all.add_row(
+    "Nbre de tsumos",
+    *[str(tsumo_rounds[player]["total"]) for player in players],
+)
+table_all.add_row(
+    "Nbre de rons",
+    *[str(ron_rounds[player]["total"]) for player in players],
+)
+table_all.add_row(
+    "% de tsumos parmi les victoires",
+    *[f"{floor(100 * tsumo_prop[player]['total'])} %" for player in players],
 )
 for p in range(n_parts):
     table_parts[p].add_row(
@@ -262,7 +366,31 @@ for p in range(n_parts):
     table_parts[p].add_row(
         "Nbre de parties gagnantes (%)",
         *[
-            f"{winning_games[player]['parts'][p]} ({int(100 * winning_games[player]['parts'][p] / len(end_results[player][p * PART_SIZE : (p + 1) * PART_SIZE]))}%)"
+            f"{winning_games[player]['parts'][p]} ({floor(100 * winning_games[player]['parts'][p] / len(end_results[player][p * PART_SIZE : (p + 1) * PART_SIZE]))}%)"
+            for player in players
+            if p * PART_SIZE in gamers_presence_parts[player]
+        ],
+    )
+    table_parts[p].add_row(
+        "Nbre de tsumos",
+        *[
+            str(tsumo_rounds[player]["parts"][p])
+            for player in players
+            if p * PART_SIZE in gamers_presence_parts[player]
+        ],
+    )
+    table_parts[p].add_row(
+        "Nbre de rons",
+        *[
+            str(ron_rounds[player]["parts"][p])
+            for player in players
+            if p * PART_SIZE in gamers_presence_parts[player]
+        ],
+    )
+    table_parts[p].add_row(
+        "Prop de tsumos parmi les victoires",
+        *[
+            f"{floor(100 * tsumo_prop[player]['parts'][p])} %"
             for player in players
             if p * PART_SIZE in gamers_presence_parts[player]
         ],
