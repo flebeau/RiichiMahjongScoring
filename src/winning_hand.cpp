@@ -42,7 +42,7 @@ QString ClassicGroup::toString() const {
            (ron_meld ? RON_MELDED_CHAR : (melded ? MELDED_CHAR : ""));
 }
 bool ClassicGroup::isSimple() const {
-    return (!tile.isHonor()) && (tile.value() > 1) &&
+    return (!tile.isHonor()) && (tile.value() > 1) && (tile.value() < 9) &&
            ((type != ClassicGroupType::CHII) || (tile.value() < 7));
 }
 
