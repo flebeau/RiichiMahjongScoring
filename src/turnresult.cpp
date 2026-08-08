@@ -473,9 +473,9 @@ int TurnResult::Tabular4(int fu, int fan) {
         return 16000; // Baiman
     } else if (fan <= 12) {
         return 24000;
-    } else if (fan <= 25) {
+    } else if (fan <= 25) { // Yakuman
         return 32000;
-    } else if (fan <= 38) {
+    } else if (fan <= 38) { // Double Yakuman
         return 64000;
     } else {
         return 96000;

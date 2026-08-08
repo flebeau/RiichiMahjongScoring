@@ -15,6 +15,7 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <qcheckbox.h>
 #include <qcombobox.h>
 #include <qlabel.h>
 #include <qpushbutton.h>
@@ -25,7 +26,8 @@
 class TileSelector : public QWidget {
     Q_OBJECT
   public:
-    TileSelector(QWidget *parent = nullptr, bool chii_selector = true);
+    TileSelector(QWidget *parent = nullptr, bool chii_selector = true,
+                 bool orphans_only = false);
 
     Tile value() const;
     void setValue(const Tile &tile);
@@ -42,6 +44,7 @@ class TileSelector : public QWidget {
 
   private:
     bool chii_;
+    bool orphans_;
     QComboBox *suit_;
     QComboBox *value_;
 };
@@ -85,7 +88,7 @@ class ClassicGroupSelector : public QGroupBox {
 class DuoGroupSelector : public QGroupBox {
     Q_OBJECT
   public:
-    DuoGroupSelector(QWidget *parent = nullptr);
+    DuoGroupSelector(QWidget *parent = nullptr, bool orphans_only = false);
 
     Tile tile() const;
     void setTile(const Tile &tile);
@@ -122,7 +125,7 @@ class HandDialog : public QDialog {
     QTabWidget *tabs_;
     QWidget *classic_tab_; /**< Tab for classic hand (3 + 3 + 3 + 3 + 2) */
     QWidget *seven_pairs_tab_;
-    QWidget *thirteen_orphans_tab_;
+    QWidget *orphans_tab_;
     /* For classic hand */
     ClassicGroupSelector *first_group_;
     ClassicGroupSelector *second_group_;
@@ -131,6 +134,8 @@ class HandDialog : public QDialog {
     DuoGroupSelector *duo_group_;
     /* For seven pairs */
     DuoGroupSelector *seven_pairs_groups_[7];
+    /* For orphans */
+    DuoGroupSelector *orphans_duo_;
     /* Other information for computing fu and fans */
     QSpinBox *doras_;
     QCheckBox *riichi_button_;
