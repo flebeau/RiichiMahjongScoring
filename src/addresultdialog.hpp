@@ -46,6 +46,13 @@ class AddResultDialog : public QDialog {
      * @return false if it's a tsumo victory
      */
     int RonVictory() const;
+
+    /**
+     * @brief Returns the draw result (whether players are tenpai or not)
+     *
+     * @return std::vector<bool>
+     */
+    std::vector<bool> DrawResult() const;
     /**
      * @brief Return the manual scores entered in manual score tab
      *
@@ -171,8 +178,17 @@ class AddResultDialog : public QDialog {
     QSpinBox *score_manual_player_3_; /**< Manual score selector */
     QLabel *label_manual_player_4_;   /**< Label for manual score */
     QSpinBox *score_manual_player_4_; /**< Manual score selector */
+    QCheckBox *tenpai_player_1_;      /**< Tenpai selector for Player 1 */
+    QLabel *label_tenpai_player_1_;   /**< Label for tenpai selector */
+    QCheckBox *tenpai_player_2_;      /**< Tenpai selector for Player 2 */
+    QLabel *label_tenpai_player_2_;   /**< Label for tenpai selector */
+    QCheckBox *tenpai_player_3_;      /**< Tenpai selector for Player 3 */
+    QLabel *label_tenpai_player_3_;   /**< Label for tenpai selector */
+    QCheckBox *tenpai_player_4_;      /**< Tenpai selector for Player 4 */
+    QLabel *label_tenpai_player_4_;   /**< Label for tenpai selector */
     QTabWidget *tabs_;                /**< Tab widget */
     QWidget *ron_tsumo_tab_;          /**< Default tab */
+    QWidget *draw_tab_;               /**< Draw tab */
     QWidget *manual_tab_;             /**< Manual tab */
     QPushButton *confirm_button_;     /**< Confirm button */
     QPushButton *cancel_button_;      /**< Cancel button */

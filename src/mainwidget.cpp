@@ -75,8 +75,12 @@ void MainWidget::addResult() {
                 add_result_dialog.Player4DidRiichi(),
                 add_result_dialog.FuScore(), add_result_dialog.FanScore(),
                 add_result_dialog.winningHand()));
-        } else { // Manual score
-            score_model_->addTurnResult(add_result_dialog.ManualScores());
+        } else if (add_result_dialog.RonVictory() == 2) { // Manual score
+            score_model_->addTurnResult(
+                TurnResult(add_result_dialog.ManualScores()));
+        } else if (add_result_dialog.RonVictory() == 3) { // Draw
+            score_model_->addTurnResult(
+                TurnResult(add_result_dialog.DrawResult()));
         }
         score_view_->resizeColumnsToContents();
     }
