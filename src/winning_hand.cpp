@@ -437,9 +437,7 @@ HandScore WinningHand::computeScore() const {
                 n_group_with_terminal++;
             }
         }
-    }
-
-    else if (type_ == HandType::CLASSIC) {
+    } else if (type_ == HandType::CLASSIC) {
         int n_concealed_pon = 0, n_pon = 0, n_kan = 0;
         for (const auto &group : hand_.classic_hand.groups) {
             if (group.tile.suit() == BAMBOO) {
@@ -552,62 +550,53 @@ HandScore WinningHand::computeScore() const {
         if (n_chii >= 3) {
             bool three_suit_chii = false;
             bool pure_straight = false;
-            for (int i = 0; i < 1; ++i) {
-                if (hand_.classic_hand.groups[i].type !=
+            int i = 0;
+            if (hand_.classic_hand.groups[0].type != ClassicGroupType::CHII)
+                ++i;
+
+            bool found_bamboo =
+                     (hand_.classic_hand.groups[i].tile.suit() == BAMBOO),
+                 found_dot = (hand_.classic_hand.groups[i].tile.suit() == DOT),
+                 found_character =
+                     (hand_.classic_hand.groups[i].tile.suit() == CHARACTER);
+            bool found_123 = (hand_.classic_hand.groups[i].tile.value() == 1),
+                 found_456 = (hand_.classic_hand.groups[i].tile.value() == 4),
+                 found_789 = (hand_.classic_hand.groups[i].tile.value() == 7);
+            for (int j = i + 1; j < 4; ++j) {
+                if (hand_.classic_hand.groups[j].type !=
                     ClassicGroupType::CHII) {
                     continue;
                 }
-                bool found_bamboo =
-                         (hand_.classic_hand.groups[i].tile.suit() == BAMBOO),
-                     found_dot =
-                         (hand_.classic_hand.groups[i].tile.suit() == DOT),
-                     found_character =
-                         (hand_.classic_hand.groups[i].tile.suit() ==
-                          CHARACTER);
-                bool found_123 =
-                         (hand_.classic_hand.groups[i].tile.value() == 1),
-                     found_456 =
-                         (hand_.classic_hand.groups[i].tile.value() == 4),
-                     found_789 =
-                         (hand_.classic_hand.groups[i].tile.value() == 7);
-                for (int j = i + 1; j < 4; ++j) {
-                    if (hand_.classic_hand.groups[j].type !=
-                        ClassicGroupType::CHII) {
-                        continue;
-                    }
-                    if (hand_.classic_hand.groups[j].tile.value() ==
-                        hand_.classic_hand.groups[i].tile.value()) {
-                        if (hand_.classic_hand.groups[j].tile.suit() ==
-                            BAMBOO) {
-                            found_bamboo = true;
-                        } else if (hand_.classic_hand.groups[j].tile.suit() ==
-                                   DOT) {
-                            found_dot = true;
-                        } else if (hand_.classic_hand.groups[j].tile.suit() ==
-                                   CHARACTER) {
-                            found_character = true;
-                        }
-                    }
-                    if (hand_.classic_hand.groups[j].tile.suit() ==
-                        hand_.classic_hand.groups[i].tile.suit()) {
-                        if (hand_.classic_hand.groups[j].tile.value() == 1) {
-                            found_123 = true;
-                        } else if (hand_.classic_hand.groups[j].tile.value() ==
-                                   4) {
-                            found_456 = true;
-                        } else if (hand_.classic_hand.groups[j].tile.value() ==
-                                   7) {
-                            found_789 = true;
-                        }
+                if (hand_.classic_hand.groups[j].tile.value() ==
+                    hand_.classic_hand.groups[i].tile.value()) {
+                    if (hand_.classic_hand.groups[j].tile.suit() == BAMBOO) {
+                        found_bamboo = true;
+                    } else if (hand_.classic_hand.groups[j].tile.suit() ==
+                               DOT) {
+                        found_dot = true;
+                    } else if (hand_.classic_hand.groups[j].tile.suit() ==
+                               CHARACTER) {
+                        found_character = true;
                     }
                 }
-                if (found_bamboo && found_dot && found_character) {
-                    three_suit_chii = true;
-                }
-                if (found_123 && found_456 && found_789) {
-                    pure_straight = true;
+                if (hand_.classic_hand.groups[j].tile.suit() ==
+                    hand_.classic_hand.groups[i].tile.suit()) {
+                    if (hand_.classic_hand.groups[j].tile.value() == 1) {
+                        found_123 = true;
+                    } else if (hand_.classic_hand.groups[j].tile.value() == 4) {
+                        found_456 = true;
+                    } else if (hand_.classic_hand.groups[j].tile.value() == 7) {
+                        found_789 = true;
+                    }
                 }
             }
+            if (found_bamboo && found_dot && found_character) {
+                three_suit_chii = true;
+            }
+            if (found_123 && found_456 && found_789) {
+                pure_straight = true;
+            }
+
             if (three_suit_chii) {
                 score.addYaku(isClosed() ? 2 : 1,
                               (isClosed() ? "Closed " : "") +
