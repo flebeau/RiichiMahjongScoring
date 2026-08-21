@@ -12,8 +12,11 @@ TurnResult::TurnResult(int _east_player, int _winner, int _ron_victory,
       riichi_player_4(_riichi_player_4), fu_score_(_fu_score),
       fan_score_(_fan_score), hand_(hand) {}
 
-TurnResult::TurnResult(std::vector<int> scores)
-    : ron_victory_(2), scores_(scores) {}
+TurnResult::TurnResult(const std::vector<int> &scores)
+    : ron_victory_(2), scores_(scores), hand_(nullptr) {}
+
+TurnResult::TurnResult(const std::vector<bool> &players_tenpai)
+    : ron_victory_(3), players_tenpai_(players_tenpai), hand_(nullptr) {}
 
 TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
     QTextStream in(description);
@@ -39,13 +42,26 @@ TurnResult::TurnResult(int n_players, QString *description) : TurnResult() {
                                         (winner_ == 3 && riichi_player_4),
                                     ron_victory_ == 1);
         }
-    } else { // Manual result
+    } else if (ron_victory_ == 2) { // Manual result
         if (n_players == 3) {
             scores_ = std::vector<int>(3, 0);
             in >> scores_[0] >> scores_[1] >> scores_[2];
         } else if (n_players == 4) {
             scores_ = std::vector<int>(4, 0);
             in >> scores_[0] >> scores_[1] >> scores_[2] >> scores_[3];
+        }
+    } else if (ron_victory_ == 3) { // Draw
+        int temp = 0;
+        players_tenpai_ = std::vector<bool>(n_players, false);
+        in >> temp;
+        players_tenpai_[0] = (temp == 1);
+        in >> temp;
+        players_tenpai_[1] = (temp == 1);
+        in >> temp;
+        players_tenpai_[2] = (temp == 1);
+        if (n_players == 4) {
+            in >> temp;
+            players_tenpai_[3] = (temp == 1);
         }
     }
 }
@@ -54,8 +70,28 @@ std::vector<int> TurnResult::computeScoreChange(int n_players) const {
     std::vector<int> result = std::vector<int>(n_players, 0);
     int temp = 0;
 
-    if (ron_victory_ == 2) { // Manual score
+    if (isManualScore()) { // Manual score
         return scores_;
+    } else if (isDraw()) {
+        // The noten (not tenpai) player(s) pay (n_players - 1) * 1000 points
+        // to the tenpai player(s)
+        int n_tenpai = 0;
+        for (int i = 0; i < n_players; i++) {
+            if (players_tenpai_[i]) {
+                n_tenpai++;
+            }
+        }
+        if (n_tenpai == 0 || n_tenpai == n_players) {
+            return result; // No point change
+        }
+        for (int i = 0; i < n_players; i++) {
+            if (players_tenpai_[i]) {
+                result[i] = (n_players - 1) * 1000 / n_tenpai;
+            } else {
+                result[i] = -(n_players - 1) * 1000 / (n_players - n_tenpai);
+            }
+        }
+        return result;
     }
     /* Handle the case of ron or tsumo victory*/
     else if (ron_victory_ == 1) {
@@ -83,8 +119,8 @@ std::vector<int> TurnResult::computeScoreChange(int n_players) const {
             }
             result[winner_] += n_players * temp;
         } else {
-            // If winner is not east, east pays according to Tabular1 and
-            // other losers pay according to Tabular3
+            // If winner is not east, east pays according to Tabular1
+            // and other losers pay according to Tabular3
             result[east_player_] -= Tabular1(fu_score_, fan_score_);
             temp = Tabular3(fu_score_, fan_score_);
             for (int i = 0; i < n_players; i++) {
@@ -129,11 +165,19 @@ void TurnResult::writeToTextStream(QTextStream &out) const {
         if (hand_ != nullptr) {
             out << " " << hand_->toString();
         }
-    } else { // Manual score
+    } else if (isManualScore()) { // Manual score
         out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
             << scores_[0] << " " << scores_[1] << " " << scores_[2];
         if (scores_.size() == 4) {
             out << " " << scores_[3];
+        }
+    } else if (isDraw()) {
+        out << east_player_ << " " << winner_ << " " << ron_victory_ << " "
+            << (players_tenpai_[0] ? 1 : 0) << " "
+            << (players_tenpai_[1] ? 1 : 0) << " "
+            << (players_tenpai_[2] ? 1 : 0);
+        if (players_tenpai_.size() == 4) {
+            out << " " << (players_tenpai_[3] ? 1 : 0);
         }
     }
 }
@@ -149,6 +193,11 @@ bool TurnResult::riichiPlayer4() const { return riichi_player_4; }
 int TurnResult::fuScore() const { return fu_score_; }
 int TurnResult::fanScore() const { return fan_score_; }
 const WinningHand *TurnResult::hand() const { return hand_; }
+bool TurnResult::isManualScore() const { return (ron_victory_ == 2); }
+bool TurnResult::isDraw() const { return (ron_victory_ == 3); }
+const std::vector<bool> &TurnResult::playersTenpai() const {
+    return players_tenpai_;
+}
 
 int TurnResult::Tabular1(int fu, int fan) {
     if (fan == 1) {
@@ -473,9 +522,9 @@ int TurnResult::Tabular4(int fu, int fan) {
         return 16000; // Baiman
     } else if (fan <= 12) {
         return 24000;
-    } else if (fan <= 25) {
+    } else if (fan <= 25) { // Yakuman
         return 32000;
-    } else if (fan <= 38) {
+    } else if (fan <= 38) { // Double Yakuman
         return 64000;
     } else {
         return 96000;

@@ -16,7 +16,10 @@ class TurnResult {
                bool _riichi_player_4 = false, int _fu_score = 20,
                int _fan_score = 0, const WinningHand *hand = nullptr);
     /** Manual score constructors */
-    TurnResult(std::vector<int> scores);
+    TurnResult(const std::vector<int> &scores);
+
+    /** Draw turn result constructor */
+    TurnResult(const std::vector<bool> &players_tenpai);
 
     /**
      * @brief Construct a new Turn Result object from a descriptive string
@@ -47,6 +50,9 @@ class TurnResult {
     int fuScore() const;
     int fanScore() const;
     const WinningHand *hand() const;
+    bool isManualScore() const;
+    bool isDraw() const;
+    const std::vector<bool> &playersTenpai() const;
 
   private:
     int east_player_; /**< Number of East player */
@@ -58,14 +64,15 @@ class TurnResult {
      */
     int ron_victory_;
     std::vector<int> scores_; /**< Score changes in case of manual result */
-    int loser_;               /**< Number of the loser if any */
-    bool riichi_player_1;     /**< Is Player 1 riichi */
-    bool riichi_player_2;     /**< Is Player 2 riichi */
-    bool riichi_player_3;     /**< Is Player 3 riichi */
-    bool riichi_player_4;     /**< Is Player 4 riichi */
-    int fu_score_;            /**< Fu score obtained */
-    int fan_score_;           /**< Bonus Fan score obtained */
-    const WinningHand *hand_; /**< Winning hand */
+    std::vector<bool> players_tenpai_; /**< Players tenpai in case of draw */
+    int loser_;                        /**< Number of the loser if any */
+    bool riichi_player_1;              /**< Is Player 1 riichi */
+    bool riichi_player_2;              /**< Is Player 2 riichi */
+    bool riichi_player_3;              /**< Is Player 3 riichi */
+    bool riichi_player_4;              /**< Is Player 4 riichi */
+    int fu_score_;                     /**< Fu score obtained */
+    int fan_score_;                    /**< Bonus Fan score obtained */
+    const WinningHand *hand_;          /**< Winning hand */
 
     /**
      * @brief Double-entry tabular corresponding to what each player must pay in

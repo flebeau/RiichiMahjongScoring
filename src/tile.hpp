@@ -37,3 +37,19 @@ class Tile {
     char suit_;
     int value_;
 };
+
+static const Tile ORPHAN_TILES[13] = {
+    Tile(BAMBOO, 1),
+    Tile(BAMBOO, 9),
+    Tile(CHARACTER, 1),
+    Tile(CHARACTER, 9),
+    Tile(DOT, 1),
+    Tile(DOT, 9),
+    Tile(HONOR, static_cast<int>(HonorValue::EAST)),
+    Tile(HONOR, static_cast<int>(HonorValue::SOUTH)),
+    Tile(HONOR, static_cast<int>(HonorValue::WEST)),
+    Tile(HONOR, static_cast<int>(HonorValue::NORTH)),
+    Tile(HONOR, static_cast<int>(HonorValue::WHITE)),
+    Tile(HONOR, static_cast<int>(HonorValue::GREEN)),
+    Tile(HONOR, static_cast<int>(HonorValue::RED)),
+};

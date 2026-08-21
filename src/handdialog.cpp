@@ -5,13 +5,15 @@
 #include <functional>
 #include <qboxlayout.h>
 #include <qcheckbox.h>
+#include <qcombobox.h>
 #include <qgridlayout.h>
 #include <qnamespace.h>
 #include <qtabwidget.h>
 
-TileSelector::TileSelector(QWidget *parent, bool chii_selector)
-    : QWidget(parent), chii_(chii_selector), suit_(new QComboBox),
-      value_(new QComboBox) {
+TileSelector::TileSelector(QWidget *parent, bool chii_selector,
+                           bool orphans_only)
+    : QWidget(parent), chii_(chii_selector), orphans_(orphans_only),
+      suit_(new QComboBox), value_(new QComboBox) {
     suit_->addItem("Bamboo", BAMBOO);
     suit_->addItem("Characters", CHARACTER);
     suit_->addItem("Dots", DOT);
@@ -70,8 +72,13 @@ void TileSelector::onSuitChange() {
         value_->addItem("Gr D", static_cast<int>(HonorValue::GREEN));
         value_->addItem("Re D", static_cast<int>(HonorValue::RED));
     } else {
-        for (int i = 1; i <= (chii_ ? 7 : 9); ++i) {
-            value_->addItem("  " + QString::number(i) + "  ", i);
+        if (orphans_) {
+            value_->addItem("  " + QString::number(1) + "  ", 1);
+            value_->addItem("  " + QString::number(9) + "  ", 9);
+        } else {
+            for (int i = 1; i <= (chii_ ? 7 : 9); ++i) {
+                value_->addItem("  " + QString::number(i) + "  ", i);
+            }
         }
     }
     value_->updateGeometry();
@@ -194,8 +201,9 @@ void ClassicGroupSelector::onRonChange() {
     emit Changed();
 }
 
-DuoGroupSelector::DuoGroupSelector(QWidget *parent)
-    : QGroupBox(parent), tile_selector_(new TileSelector(this, false)) {
+DuoGroupSelector::DuoGroupSelector(QWidget *parent, bool orphans_only)
+    : QGroupBox(parent),
+      tile_selector_(new TileSelector(this, false, orphans_only)) {
     QHBoxLayout *layout = new QHBoxLayout;
     layout->addWidget(tile_selector_);
     layout->setAlignment(Qt::AlignCenter);
@@ -217,12 +225,13 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
                        bool east_player, bool riichi)
     : QDialog(parent), ron_(ron), tabs_(new QTabWidget),
       classic_tab_(new QWidget), seven_pairs_tab_(new QWidget),
-      thirteen_orphans_tab_(new QWidget),
+      orphans_tab_(new QWidget),
       first_group_(new ClassicGroupSelector(this, ron)),
       second_group_(new ClassicGroupSelector(this, ron)),
       third_group_(new ClassicGroupSelector(this, ron)),
       fourth_group_(new ClassicGroupSelector(this, ron)),
-      duo_group_(new DuoGroupSelector), doras_(new QSpinBox),
+      duo_group_(new DuoGroupSelector),
+      orphans_duo_(new DuoGroupSelector(this, true)), doras_(new QSpinBox),
       riichi_button_(new QCheckBox(tr("Riichi"))),
       ippatsu_button_(new QCheckBox(tr("Ippatsu"))),
       prevailing_wind_label_(new QLabel(tr("Prevailing"))),
@@ -257,6 +266,13 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
     seven_pairs_layout->addWidget(seven_pairs_groups_[6], 3, 1, 1, 2);
     seven_pairs_tab_->setLayout(seven_pairs_layout);
     tabs_->addTab(seven_pairs_tab_, "Seven pairs");
+
+    /* Create the orphans tab */
+    QVBoxLayout *orphans_layout = new QVBoxLayout;
+    orphans_layout->addWidget(orphans_duo_);
+
+    orphans_tab_->setLayout(orphans_layout);
+    tabs_->addTab(orphans_tab_, "Thirteen Orphans");
 
     /* Add other informations */
     QGridLayout *victory_infos_layout = new QGridLayout;
@@ -338,8 +354,13 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
                 &HandDialog::onChange);
     connect(duo_group_, &DuoGroupSelector::Changed, this,
             &HandDialog::onChange);
+
     for (const auto &duo : seven_pairs_groups_)
         connect(duo, &DuoGroupSelector::Changed, this, &HandDialog::onChange);
+
+    connect(orphans_duo_, &DuoGroupSelector::Changed, this,
+            &HandDialog::onChange);
+
     // connect(doras_, &QSpinBox::valueChanged, this,
     // &HandDialog::onChange);
     connect(riichi_button_, &QCheckBox::toggled, this, &HandDialog::onChange);
@@ -400,7 +421,8 @@ HandDialog::HandDialog(QWidget *parent, const WinningHand *hand, bool ron,
                 seven_pairs_groups_[i]->setTile(groups[i]);
             }
         } else if (hand->type() == HandType::ORPHANS) {
-            // TODO
+            tabs_->setCurrentIndex(2);
+            orphans_duo_->setTile(hand->hand().duo_orphans_hand);
         }
         if (hand->isRiichi()) {
             riichi_button_->setChecked(true);
@@ -452,6 +474,18 @@ void HandDialog::onChange() {
         }
         hand_represented_ = WinningHand(
             duo_tiles,
+            Tile(HONOR,
+                 prevailing_wind_selector_
+                     ->itemData(prevailing_wind_selector_->currentIndex())
+                     .toInt()),
+            Tile(HONOR, player_wind_selector_
+                            ->itemData(player_wind_selector_->currentIndex())
+                            .toInt()),
+            riichi_button_->isChecked(), ippatsu_button_->isChecked(), ron_,
+            doras_->value());
+    } else if (tabs_->currentIndex() == 2) { // Orphans
+        hand_represented_ = WinningHand(
+            orphans_duo_->tile(),
             Tile(HONOR,
                  prevailing_wind_selector_
                      ->itemData(prevailing_wind_selector_->currentIndex())

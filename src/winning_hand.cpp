@@ -42,7 +42,7 @@ QString ClassicGroup::toString() const {
            (ron_meld ? RON_MELDED_CHAR : (melded ? MELDED_CHAR : ""));
 }
 bool ClassicGroup::isSimple() const {
-    return (!tile.isHonor()) && (tile.value() > 1) &&
+    return (!tile.isHonor()) && (tile.value() > 1) && (tile.value() < 9) &&
            ((type != ClassicGroupType::CHII) || (tile.value() < 7));
 }
 
@@ -95,9 +95,14 @@ void HandScore::addYakuman(const QString &detail, bool doubled) {
     if (doubled)
         value *= 2;
     fan_ += value;
-    yakus_.append(
-        ValueDetail{value, "<b style =\"color: rgba(17, 146, 60, 1);\">" +
-                               detail + "</b>"});
+    if (doubled)
+        yakus_.append(
+            ValueDetail{value, "<b style =\"color: rgb(235, 216, 2);\">" +
+                                   detail + " &mdash; Double Yakuman</b>"});
+    else
+        yakus_.append(
+            ValueDetail{value, "<b style =\"color: rgba(17, 146, 60, 1);\">" +
+                                   detail + " &mdash; Yakuman</b>"});
 }
 
 QString HandScore::toString() const {
@@ -242,7 +247,13 @@ QString WinningHand::toUTF8Symbols() const {
         for (const auto &pair : hand_.seven_pairs_hand) {
             result += QString(pair.toUTF8()).repeated(2) + " ";
         }
-    } else if (type_ == HandType::ORPHANS) { // TODO
+    } else if (type_ == HandType::ORPHANS) {
+        for (const Tile &orphan : ORPHAN_TILES) {
+            if (orphan == hand_.duo_orphans_hand)
+                result += QString(orphan.toUTF8()).repeated(2);
+            else
+                result += QString(orphan.toUTF8());
+        }
     }
 
     return result;
@@ -272,6 +283,15 @@ WinningHand::WinningHand(const QString &description, bool riichi, bool ron)
             in_hand >> pair;
             hand_.seven_pairs_hand[i] = Tile(pair);
         }
+    } else if (descr[0] == '1') { // Orphans
+        type_ = HandType::ORPHANS;
+        in >> hand_descr;
+        hand_descr.replace('-', ' ');
+        QTextStream in_hand(&hand_descr);
+        QString pair;
+        in_hand >> pair; // Remove 13O prefix
+        in_hand >> pair;
+        hand_.duo_orphans_hand = Tile(pair);
     }
     QString infos;
     in >> infos;
@@ -387,7 +407,7 @@ HandScore WinningHand::computeScore() const {
     if (isIppatsu()) {
         score.addYaku(1, "Ippatsu");
     }
-    if (isClosed() && isTsumo()) {
+    if (isClosed() && isTsumo() && type_ != HandType::ORPHANS) {
         score.addYaku(1, "Fully concealed hand");
     }
 
@@ -396,7 +416,7 @@ HandScore WinningHand::computeScore() const {
         n_dot_group = 0, n_character_group = 0;
 
     if (type_ == HandType::ORPHANS) {
-        score.addYakuman("Thirteen Orphans", true);
+        score.addYakuman("Thirteen Orphans", false);
     } else if (type_ == HandType::PAIRS) {
         score.addYaku(2, "Seven pairs");
         for (const auto &tile : hand_.seven_pairs_hand) {
@@ -417,9 +437,7 @@ HandScore WinningHand::computeScore() const {
                 n_group_with_terminal++;
             }
         }
-    }
-
-    else if (type_ == HandType::CLASSIC) {
+    } else if (type_ == HandType::CLASSIC) {
         int n_concealed_pon = 0, n_pon = 0, n_kan = 0;
         for (const auto &group : hand_.classic_hand.groups) {
             if (group.tile.suit() == BAMBOO) {
@@ -532,62 +550,53 @@ HandScore WinningHand::computeScore() const {
         if (n_chii >= 3) {
             bool three_suit_chii = false;
             bool pure_straight = false;
-            for (int i = 0; i < 1; ++i) {
-                if (hand_.classic_hand.groups[i].type !=
+            int i = 0;
+            if (hand_.classic_hand.groups[0].type != ClassicGroupType::CHII)
+                ++i;
+
+            bool found_bamboo =
+                     (hand_.classic_hand.groups[i].tile.suit() == BAMBOO),
+                 found_dot = (hand_.classic_hand.groups[i].tile.suit() == DOT),
+                 found_character =
+                     (hand_.classic_hand.groups[i].tile.suit() == CHARACTER);
+            bool found_123 = (hand_.classic_hand.groups[i].tile.value() == 1),
+                 found_456 = (hand_.classic_hand.groups[i].tile.value() == 4),
+                 found_789 = (hand_.classic_hand.groups[i].tile.value() == 7);
+            for (int j = i + 1; j < 4; ++j) {
+                if (hand_.classic_hand.groups[j].type !=
                     ClassicGroupType::CHII) {
                     continue;
                 }
-                bool found_bamboo =
-                         (hand_.classic_hand.groups[i].tile.suit() == BAMBOO),
-                     found_dot =
-                         (hand_.classic_hand.groups[i].tile.suit() == DOT),
-                     found_character =
-                         (hand_.classic_hand.groups[i].tile.suit() ==
-                          CHARACTER);
-                bool found_123 =
-                         (hand_.classic_hand.groups[i].tile.value() == 1),
-                     found_456 =
-                         (hand_.classic_hand.groups[i].tile.value() == 4),
-                     found_789 =
-                         (hand_.classic_hand.groups[i].tile.value() == 7);
-                for (int j = i + 1; j < 4; ++j) {
-                    if (hand_.classic_hand.groups[j].type !=
-                        ClassicGroupType::CHII) {
-                        continue;
-                    }
-                    if (hand_.classic_hand.groups[j].tile.value() ==
-                        hand_.classic_hand.groups[i].tile.value()) {
-                        if (hand_.classic_hand.groups[j].tile.suit() ==
-                            BAMBOO) {
-                            found_bamboo = true;
-                        } else if (hand_.classic_hand.groups[j].tile.suit() ==
-                                   DOT) {
-                            found_dot = true;
-                        } else if (hand_.classic_hand.groups[j].tile.suit() ==
-                                   CHARACTER) {
-                            found_character = true;
-                        }
-                    }
-                    if (hand_.classic_hand.groups[j].tile.suit() ==
-                        hand_.classic_hand.groups[i].tile.suit()) {
-                        if (hand_.classic_hand.groups[j].tile.value() == 1) {
-                            found_123 = true;
-                        } else if (hand_.classic_hand.groups[j].tile.value() ==
-                                   4) {
-                            found_456 = true;
-                        } else if (hand_.classic_hand.groups[j].tile.value() ==
-                                   7) {
-                            found_789 = true;
-                        }
+                if (hand_.classic_hand.groups[j].tile.value() ==
+                    hand_.classic_hand.groups[i].tile.value()) {
+                    if (hand_.classic_hand.groups[j].tile.suit() == BAMBOO) {
+                        found_bamboo = true;
+                    } else if (hand_.classic_hand.groups[j].tile.suit() ==
+                               DOT) {
+                        found_dot = true;
+                    } else if (hand_.classic_hand.groups[j].tile.suit() ==
+                               CHARACTER) {
+                        found_character = true;
                     }
                 }
-                if (found_bamboo && found_dot && found_character) {
-                    three_suit_chii = true;
-                }
-                if (found_123 && found_456 && found_789) {
-                    pure_straight = true;
+                if (hand_.classic_hand.groups[j].tile.suit() ==
+                    hand_.classic_hand.groups[i].tile.suit()) {
+                    if (hand_.classic_hand.groups[j].tile.value() == 1) {
+                        found_123 = true;
+                    } else if (hand_.classic_hand.groups[j].tile.value() == 4) {
+                        found_456 = true;
+                    } else if (hand_.classic_hand.groups[j].tile.value() == 7) {
+                        found_789 = true;
+                    }
                 }
             }
+            if (found_bamboo && found_dot && found_character) {
+                three_suit_chii = true;
+            }
+            if (found_123 && found_456 && found_789) {
+                pure_straight = true;
+            }
+
             if (three_suit_chii) {
                 score.addYaku(isClosed() ? 2 : 1,
                               (isClosed() ? "Closed " : "") +
@@ -633,9 +642,38 @@ HandScore WinningHand::computeScore() const {
         }
         if (n_bamboo_group == n_groups || n_dot_group == n_groups ||
             n_character_group == n_groups) {
-            score.addBetterYaku((isClosed() ? 6 : 5),
-                                (isClosed() ? "Closed " : "") +
-                                    QString("Full Flush Hand"));
+            // Nine Gates
+            bool nine_gates = true;
+            if (type_ != HandType::CLASSIC || !isClosed())
+                nine_gates = false;
+            else {
+                int occ_tiles[10] = {};
+                for (const auto &group : hand_.classic_hand.groups) {
+                    if (group.type == ClassicGroupType::PON) {
+                        occ_tiles[group.tile.value()] += 3;
+                    } else if (group.type == ClassicGroupType::CHII) {
+                        for (int i = 0; i <= 2; ++i) {
+                            occ_tiles[group.tile.value() + i]++;
+                        }
+                    }
+                }
+                occ_tiles[hand_.classic_hand.duo_tile.value()] += 2;
+
+                // Match for 1112345678999 plus duo
+                if (occ_tiles[1] < 3 || occ_tiles[9] < 3)
+                    nine_gates = false;
+                for (int i = 2; i <= 8; ++i) {
+                    if (occ_tiles[i] < 1)
+                        nine_gates = false;
+                }
+            }
+
+            if (nine_gates)
+                score.addYakuman("Nine Gates", false);
+            else
+                score.addBetterYaku((isClosed() ? 6 : 5),
+                                    (isClosed() ? "Closed " : "") +
+                                        QString("Full Flush Hand"));
         } else if ((n_bamboo_group + n_character_group + n_dot_group > 0) &&
                    ((n_bamboo_group + n_dragon_group + n_wind_group ==
                      n_groups) ||

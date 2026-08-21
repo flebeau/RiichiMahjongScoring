@@ -35,8 +35,18 @@ AddResultDialog::AddResultDialog(QWidget *parent,
       score_manual_player_2_(new QSpinBox),
       label_manual_player_3_(new QLabel(tr("%1 scored").arg(player_names_[2]))),
       score_manual_player_3_(new QSpinBox),
-      score_manual_player_4_(new QSpinBox), tabs_(new QTabWidget),
-      ron_tsumo_tab_(new QWidget), manual_tab_(new QWidget),
+      score_manual_player_4_(new QSpinBox), tenpai_player_1_(new QCheckBox),
+      label_tenpai_player_1_(
+          new QLabel(tr("%1 was tenpai").arg(player_names_[0]))),
+      tenpai_player_2_(new QCheckBox),
+      label_tenpai_player_2_(
+          new QLabel(tr("%1 was tenpai").arg(player_names_[1]))),
+      tenpai_player_3_(new QCheckBox),
+      label_tenpai_player_3_(
+          new QLabel(tr("%1 was tenpai").arg(player_names_[2]))),
+      tenpai_player_4_(new QCheckBox), tabs_(new QTabWidget),
+      ron_tsumo_tab_(new QWidget), draw_tab_(new QWidget),
+      manual_tab_(new QWidget),
       confirm_button_(new QPushButton(tr("&Confirm"))),
       cancel_button_(new QPushButton(tr("C&ancel"))),
       help_button_(new QPushButton(tr("&How to Score"))) {
@@ -118,27 +128,54 @@ AddResultDialog::AddResultDialog(QWidget *parent,
 
     ron_tsumo_tab_->setLayout(default_tab_layout);
 
+    /* Create the layout for the draw tab */
+    QGridLayout *draw_tab_layout = new QGridLayout;
+    draw_tab_layout->setColumnStretch(0, 1);
+    draw_tab_layout->setColumnStretch(1, 0);
+    draw_tab_layout->setColumnStretch(2, 0);
+    draw_tab_layout->setColumnStretch(3, 1);
+
+    draw_tab_layout->addWidget(tenpai_player_1_, 0, 1);
+    draw_tab_layout->addWidget(label_tenpai_player_1_, 0, 2);
+    draw_tab_layout->addWidget(tenpai_player_2_, 1, 1);
+    draw_tab_layout->addWidget(label_tenpai_player_2_, 1, 2);
+    draw_tab_layout->addWidget(tenpai_player_3_, 2, 1);
+    draw_tab_layout->addWidget(label_tenpai_player_3_, 2, 2);
+
+    if (n_players_ == ScoreModel::N_Players::FOUR_PLAYERS) {
+        label_tenpai_player_4_ =
+            new QLabel(tr("%1 was tenpai").arg(player_names_[3]));
+        draw_tab_layout->addWidget(tenpai_player_4_, 3, 1);
+        draw_tab_layout->addWidget(label_tenpai_player_4_, 3, 2);
+    }
+
+    draw_tab_->setLayout(draw_tab_layout);
+
     /* Create the layout for the manual score tab */
     QGridLayout *manual_tab_layout = new QGridLayout;
 
-    manual_tab_layout->addWidget(label_manual_player_1_, 0, 0);
-    manual_tab_layout->addWidget(score_manual_player_1_, 0, 1);
-    manual_tab_layout->addWidget(label_manual_player_2_, 1, 0);
-    manual_tab_layout->addWidget(score_manual_player_2_, 1, 1);
-    manual_tab_layout->addWidget(label_manual_player_3_, 2, 0);
-    manual_tab_layout->addWidget(score_manual_player_3_, 2, 1);
+    manual_tab_layout->setColumnStretch(0, 1);
+    manual_tab_layout->setColumnStretch(1, 0);
+    manual_tab_layout->setColumnStretch(3, 1);
+
+    manual_tab_layout->addWidget(label_manual_player_1_, 0, 1);
+    manual_tab_layout->addWidget(score_manual_player_1_, 0, 2);
+    manual_tab_layout->addWidget(label_manual_player_2_, 1, 1);
+    manual_tab_layout->addWidget(score_manual_player_2_, 1, 2);
+    manual_tab_layout->addWidget(label_manual_player_3_, 2, 1);
+    manual_tab_layout->addWidget(score_manual_player_3_, 2, 2);
     if (n_players_ == ScoreModel::N_Players::FOUR_PLAYERS) {
         label_manual_player_4_ =
             new QLabel(tr("%1 scored").arg(player_names_[3]));
-        manual_tab_layout->addWidget(label_manual_player_4_, 3, 0);
-        manual_tab_layout->addWidget(score_manual_player_4_, 3, 1);
+        manual_tab_layout->addWidget(label_manual_player_4_, 3, 1);
+        manual_tab_layout->addWidget(score_manual_player_4_, 3, 2);
     }
-    manual_tab_layout->addWidget(new QWidget, 3, 0, 2, 2);
 
     manual_tab_->setLayout(manual_tab_layout);
 
     /* Add tabs to the tab widget */
     tabs_->addTab(ron_tsumo_tab_, tr("Ron or tsumo"));
+    tabs_->addTab(draw_tab_, tr("Draw"));
     tabs_->addTab(manual_tab_, tr("Manual score"));
 
     /* Create the confirm / cancel layout */
@@ -189,9 +226,23 @@ int AddResultDialog::Winner() const {
 int AddResultDialog::RonVictory() const {
     if (tabs_->currentIndex() == 0) {
         return static_cast<int>(ron_button_->isChecked());
-    } else {
+    } else if (tabs_->currentIndex() == 1) { // Draw
+        return 3;
+    } else { // Manual
         return 2;
     }
+}
+
+std::vector<bool> AddResultDialog::DrawResult() const {
+    std::vector<bool> draw_result =
+        std::vector<bool>(static_cast<int>(n_players_), false);
+    draw_result[0] = tenpai_player_1_->isChecked();
+    draw_result[1] = tenpai_player_2_->isChecked();
+    draw_result[2] = tenpai_player_3_->isChecked();
+    if (n_players_ == ScoreModel::N_Players::FOUR_PLAYERS) {
+        draw_result[3] = tenpai_player_4_->isChecked();
+    }
+    return draw_result;
 }
 
 std::vector<int> AddResultDialog::ManualScores() const {
