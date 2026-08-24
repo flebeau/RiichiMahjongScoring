@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QDialog>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QGroupBox>
 #include <QLabel>
 #include <QPushButton>
@@ -17,8 +19,13 @@ class ShowDetailDialog : public QDialog {
                      const ScoreModel::N_Players &n_players,
                      const std::vector<QString> &player_names);
 
+  protected:
+    void resizeEvent(QResizeEvent *event) override;
+
   private:
     QLabel *label_info_;
 
     QPushButton *ok_button_;
+    QGraphicsScene *hand_scene_ = nullptr;
+    QGraphicsView *hand_view_ = nullptr;
 };

@@ -32,6 +32,7 @@ class Tile {
     bool isOrphan() const;
 
     bool operator==(const Tile &other) const;
+    bool operator!=(const Tile &other) const;
 
   private:
     char suit_;

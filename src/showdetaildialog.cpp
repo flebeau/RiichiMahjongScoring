@@ -1,8 +1,18 @@
+#include <QApplication>
 #include <QDebug>
-#include <QFontDatabase>
+#include <QFontMetrics>
+#include <QGraphicsProxyWidget>
+#include <QGraphicsTextItem>
 #include <QHBoxLayout>
+#include <QPair>
+#include <QTransform>
 #include <QVBoxLayout>
+#include <qdebug.h>
+#include <qglobal.h>
+#include <qgraphicsitem.h>
 #include <qgroupbox.h>
+#include <qnamespace.h>
+#include <qsizepolicy.h>
 
 #include "showdetaildialog.hpp"
 
@@ -138,11 +148,57 @@ ShowDetailDialog::ShowDetailDialog(QWidget *parent,
         QLabel *hand_score =
             new QLabel(turn_result.hand()->computeScore().toString());
 
-        QLabel *hand_draw = new QLabel(turn_result.hand()->toUTF8Symbols());
-        hand_draw->setAlignment(Qt::AlignCenter);
-        hand_draw->setStyleSheet("font-size: 48pt");
+        hand_scene_ = new QGraphicsScene();
+        hand_view_ = new QGraphicsView(hand_scene_);
+        hand_view_->setAlignment(Qt::AlignCenter);
+        hand_view_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        hand_view_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+        QString utf8Hand = turn_result.hand()->toUTF8Symbols();
+
+        int tileHeight = 48;
+
+        QFont font;
+        font.setPointSize(tileHeight);
+        font.setFamily("Noto Sans, Arial, DejaVu Sans");
+
+        int tileWidth = 49;
+        int x = 0;
+
+        for (auto it = utf8Hand.constBegin(); it != utf8Hand.constEnd(); ++it) {
+            if (it->isHighSurrogate() && (it + 1) != utf8Hand.constEnd() &&
+                (it + 1)->isLowSurrogate()) {
+
+                QString tileStr = QString(it, 2);
+                QGraphicsTextItem *tile = new QGraphicsTextItem(tileStr);
+                tile->setFont(font);
+                tile->setPos(x, 0);
+                hand_scene_->addItem(tile);
+                x += tileWidth;
+                ++it;
+            } else if (*it == '#') {
+                if (!hand_scene_->items().isEmpty()) {
+                    QGraphicsTextItem *lastTile =
+                        dynamic_cast<QGraphicsTextItem *>(
+                            hand_scene_->items().first());
+                    if (lastTile) {
+                        lastTile->setTransformOriginPoint(53, 84);
+                        lastTile->setRotation(90);
+                        lastTile->setPos(x - 95, 1);
+                        x = x - tileWidth + 60;
+                    }
+                }
+            } else if (*it == ' ') {
+                x += tileWidth / 4;
+            }
+        }
+
+        hand_scene_->setSceneRect(-3, 14, x + 14, 82);
+        hand_view_->fitInView(hand_scene_->sceneRect(), Qt::KeepAspectRatio);
+        hand_view_->setMinimumHeight(80);
+
         QVBoxLayout *hand_layout = new QVBoxLayout;
-        hand_layout->addWidget(hand_draw);
+        hand_layout->addWidget(hand_view_);
         hand_layout->addWidget(hand_score);
         hand_details->setLayout(hand_layout);
         main_layout->addWidget(hand_details);
@@ -157,4 +213,11 @@ ShowDetailDialog::ShowDetailDialog(QWidget *parent,
 
     // Set dialog title
     setWindowTitle("Turn result detail");
+}
+
+void ShowDetailDialog::resizeEvent(QResizeEvent *event) {
+    QDialog::resizeEvent(event);
+    if (hand_view_ != nullptr && hand_scene_ != nullptr) {
+        hand_view_->fitInView(hand_scene_->sceneRect(), Qt::KeepAspectRatio);
+    }
 }

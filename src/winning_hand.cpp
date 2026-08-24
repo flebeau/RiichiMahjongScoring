@@ -223,37 +223,53 @@ static QString HIDDEN_TILE = QString::fromUcs4(HIDDEN_TILE_CHAR, 1);
 QString WinningHand::toUTF8Symbols() const {
     QString result;
     if (type_ == HandType::CLASSIC) {
+        bool duo_melded = isRon();
         for (const auto &group : hand_.classic_hand.groups) {
             if (group.type == ClassicGroupType::PON) {
-                result += group.tile.toUTF8().repeated(3) + " ";
+                result += group.tile.toUTF8().repeated(3);
             } else if (group.type == ClassicGroupType::KAN) {
                 if (group.melded) {
-                    result += QString(group.tile.toUTF8()).repeated(4) + " ";
+                    result += QString(group.tile.toUTF8()).repeated(4);
                 } else {
                     result += HIDDEN_TILE +
                               QString(group.tile.toUTF8()).repeated(2) +
-                              HIDDEN_TILE + " ";
+                              HIDDEN_TILE;
                 }
             } else if (group.type == ClassicGroupType::CHII) {
                 result +=
                     QString(group.tile.toUTF8()) +
                     Tile(group.tile.suit(), group.tile.value() + 1).toUTF8() +
-                    Tile(group.tile.suit(), group.tile.value() + 2).toUTF8() +
-                    " ";
+                    Tile(group.tile.suit(), group.tile.value() + 2).toUTF8();
             }
+            if (group.melded || group.ron_meld) {
+                result += "#";
+                duo_melded = false;
+            }
+            result += " ";
         }
         result += QString(hand_.classic_hand.duo_tile.toUTF8()).repeated(2);
+        if (duo_melded) {
+            result += "#";
+        }
+
     } else if (type_ == HandType::PAIRS) {
+        bool first = true;
         for (const auto &pair : hand_.seven_pairs_hand) {
-            result += QString(pair.toUTF8()).repeated(2) + " ";
+            if (first)
+                first = false;
+            else
+                result += " ";
+            result += QString(pair.toUTF8()).repeated(2);
+        }
+        if (isRon()) {
+            result += "#";
         }
     } else if (type_ == HandType::ORPHANS) {
         for (const Tile &orphan : ORPHAN_TILES) {
-            if (orphan == hand_.duo_orphans_hand)
-                result += QString(orphan.toUTF8()).repeated(2);
-            else
+            if (orphan != hand_.duo_orphans_hand)
                 result += QString(orphan.toUTF8());
         }
+        result += " " + QString(hand_.duo_orphans_hand.toUTF8()).repeated(2);
     }
 
     return result;

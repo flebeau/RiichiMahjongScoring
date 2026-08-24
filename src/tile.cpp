@@ -38,3 +38,6 @@ bool Tile::isOrphan() const { return isHonor() || isTerminal(); }
 bool Tile::operator==(const Tile &other) const {
     return suit_ == other.suit() && value_ == other.value();
 }
+bool Tile::operator!=(const Tile &other) const {
+    return suit_ != other.suit() || value_ != other.value();
+}
