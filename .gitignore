@@ -1,4 +1,5 @@
 build/
-scoresheets*
+scoresheets/*
 .vscode
-.cache/
+workspace.code-workspace
+.*cache/

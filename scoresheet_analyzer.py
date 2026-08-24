@@ -244,7 +244,6 @@ winning_games = {
 }
 for player in game_results:
     winning_games[player]["total"] = sum(winning_games[player]["parts"])
-print(tsumos)
 
 # Nombres de tsumo
 tsumo_rounds = {
